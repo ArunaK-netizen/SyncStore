@@ -23,8 +23,24 @@ export default function CheckoutModal({ visible, onClose }: CheckoutModalProps) 
     const [tip, setTip] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const finalAmount = totalAmount + (parseFloat(tip) || 0);
+    const subtotalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Split taxes based on category
+    let alcoholTax = 0;
+    let foodTax = 0;
+
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        const category = item.category?.toLowerCase();
+        if (category === 'beer' || category === 'spirits') {
+            alcoholTax += itemTotal * 0.09;
+        } else {
+            foodTax += itemTotal * 0.06;
+        }
+    });
+
+    const totalTax = alcoholTax + foodTax;
+    const finalAmount = subtotalAmount + totalTax + (parseFloat(tip) || 0);
 
     // If the cart becomes empty while the modal is open (e.g. after confirming a sale),
     // simply close the modal instead of briefly showing a "Cart is empty" state.
@@ -197,8 +213,26 @@ export default function CheckoutModal({ visible, onClose }: CheckoutModalProps) 
                                     </View>
                                 </View>
 
-                                {/* Total & Actions */}
                                 <View style={styles.totalSection}>
+                                    <View style={[styles.totalRow, { marginBottom: 8 }]}>
+                                        <Text style={[styles.subtotalLabel, isDark && styles.subtotalLabelDark]}>Subtotal</Text>
+                                        <Text style={[styles.subtotalValue, isDark && styles.subtotalValueDark]}>${subtotalAmount.toFixed(2)}</Text>
+                                    </View>
+
+                                    {alcoholTax > 0 && (
+                                        <View style={[styles.totalRow, { marginBottom: 8 }]}>
+                                            <Text style={[styles.subtotalLabel, isDark && styles.subtotalLabelDark]}>Alcohol Tax (9%)</Text>
+                                            <Text style={[styles.subtotalValue, isDark && styles.subtotalValueDark]}>${alcoholTax.toFixed(2)}</Text>
+                                        </View>
+                                    )}
+
+                                    {foodTax > 0 && (
+                                        <View style={[styles.totalRow, { marginBottom: 16 }]}>
+                                            <Text style={[styles.subtotalLabel, isDark && styles.subtotalLabelDark]}>Food Tax (6%)</Text>
+                                            <Text style={[styles.subtotalValue, isDark && styles.subtotalValueDark]}>${foodTax.toFixed(2)}</Text>
+                                        </View>
+                                    )}
+
                                     <View style={styles.totalRow}>
                                         <Text style={[styles.totalLabel, isDark && styles.totalLabelDark]}>Total Amount</Text>
                                         <Text style={styles.totalValue}>${finalAmount.toFixed(2)}</Text>
@@ -312,8 +346,26 @@ export default function CheckoutModal({ visible, onClose }: CheckoutModalProps) 
                                     </View>
                                 </View>
 
-                                {/* Total & Actions */}
                                 <View style={styles.totalSection}>
+                                    <View style={[styles.totalRow, { marginBottom: 8 }]}>
+                                        <Text style={[styles.subtotalLabel, isDark && styles.subtotalLabelDark]}>Subtotal</Text>
+                                        <Text style={[styles.subtotalValue, isDark && styles.subtotalValueDark]}>${subtotalAmount.toFixed(2)}</Text>
+                                    </View>
+
+                                    {alcoholTax > 0 && (
+                                        <View style={[styles.totalRow, { marginBottom: 8 }]}>
+                                            <Text style={[styles.subtotalLabel, isDark && styles.subtotalLabelDark]}>Alcohol Tax (9%)</Text>
+                                            <Text style={[styles.subtotalValue, isDark && styles.subtotalValueDark]}>${alcoholTax.toFixed(2)}</Text>
+                                        </View>
+                                    )}
+
+                                    {foodTax > 0 && (
+                                        <View style={[styles.totalRow, { marginBottom: 16 }]}>
+                                            <Text style={[styles.subtotalLabel, isDark && styles.subtotalLabelDark]}>Food Tax (6%)</Text>
+                                            <Text style={[styles.subtotalValue, isDark && styles.subtotalValueDark]}>${foodTax.toFixed(2)}</Text>
+                                        </View>
+                                    )}
+
                                     <View style={styles.totalRow}>
                                         <Text style={[styles.totalLabel, isDark && styles.totalLabelDark]}>Total Amount</Text>
                                         <Text style={styles.totalValue}>${finalAmount.toFixed(2)}</Text>
@@ -594,10 +646,26 @@ const styles = StyleSheet.create({
     totalLabelDark: {
         color: '#ffffff',
     },
+    subtotalLabel: {
+        fontSize: 16,
+        fontFamily: 'Outfit_600SemiBold',
+        color: '#8e8e93',
+    },
+    subtotalLabelDark: {
+        color: '#98989d',
+    },
     totalValue: {
         fontSize: 24,
         fontFamily: 'Outfit_700Bold',
         color: '#007AFF',
+    },
+    subtotalValue: {
+        fontSize: 16,
+        fontFamily: 'Outfit_600SemiBold',
+        color: '#000000',
+    },
+    subtotalValueDark: {
+        color: '#ffffff',
     },
     actions: {
         flexDirection: 'row',

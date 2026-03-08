@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, updateDoc } from '@react-native-firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDb } from '../firebase';
@@ -47,13 +47,11 @@ export const useSalesData = () => {
 
         const db = getDb();
 
-        // Load all transactions ordered by time.
-        // (Current data doesn't reliably store a per-user key, so we avoid filtering here
-        // to ensure past sales still appear after reload. We can reintroduce a user filter
-        // once the data is fully migrated.)
+        // Filter by the current user to prevent data leaks.
+        // We use client-side sorting to avoid requiring a composite index right away.
         const q = query(
             collection(db, 'parttimes', parttimeId, 'transactions'),
-            orderBy('timestamp', 'desc')
+            where('userId', '==', user.uid)
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -69,6 +67,7 @@ export const useSalesData = () => {
                 seen.add(doc.id);
                 transactionsData.push({ id: doc.id, ...doc.data() } as Transaction);
             });
+            transactionsData.sort((a, b) => b.timestamp - a.timestamp);
             setTransactions(transactionsData);
             setLoading(false);
         });
