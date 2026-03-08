@@ -559,13 +559,26 @@ function EmployeeDetail({ uid, employees, transactions, onBack }: {
                             <div className="flex items-center gap-2 ml-auto">
                                 <button
                                     onClick={() => {
-                                        const rows = dayData.dayTx.map((t, i) => ({
-                                            '#': i + 1,
-                                            Items: getItems(t).map(it => `${it.productName} ×${it.quantity}`).join(', '),
-                                            Payment: t.paymentMethod?.toUpperCase() || '',
-                                            Tip: t.tip || 0,
-                                            Total: t.totalAmount || 0,
-                                        }));
+                                        const rows = dayData.dayTx.flatMap((t, i) => {
+                                            const timeStr = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                            const items = getItems(t);
+                                            if (items.length === 0) {
+                                                return [{
+                                                    Time: timeStr,
+                                                    Product: t.productName || 'Custom',
+                                                    Qty: t.quantity || 1,
+                                                    Payment: t.paymentMethod?.toUpperCase() || '',
+                                                    Amount: (t.price || 0) * (t.quantity || 1),
+                                                }];
+                                            }
+                                            return items.map(it => ({
+                                                Time: timeStr,
+                                                Product: it.productName,
+                                                Qty: it.quantity,
+                                                Payment: t.paymentMethod?.toUpperCase() || '',
+                                                Amount: it.price * it.quantity,
+                                            }));
+                                        });
                                         const ws = XLSX.utils.json_to_sheet(rows);
                                         const wb = XLSX.utils.book_new();
                                         XLSX.utils.book_append_sheet(wb, ws, 'Day');
@@ -586,22 +599,38 @@ function EmployeeDetail({ uid, employees, transactions, onBack }: {
                                         doc.setTextColor(120, 120, 120);
                                         doc.text(`Date: ${selectedDay}`, 14, 26);
                                         const dayTips = dayData.dayTx.reduce((s: number, t: any) => s + (t.tip || 0), 0);
-                                        doc.text(`Total: $${dayData.dayRevenue.toFixed(2)}  |  Tips: $${dayTips.toFixed(2)}  |  Sales: ${dayData.dayTx.length}`, 14, 32);
+                                        doc.text(`Total Sales: $${dayData.dayRevenue.toFixed(2)}  |  Tips: $${dayTips.toFixed(2)}  |  Orders: ${dayData.dayTx.length}`, 14, 32);
                                         doc.setTextColor(0, 0, 0);
+
+                                        const tableBody = dayData.dayTx.flatMap(t => {
+                                            const timeStr = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                            const items = getItems(t);
+                                            if (items.length === 0) {
+                                                return [[
+                                                    timeStr,
+                                                    t.productName || 'Custom',
+                                                    t.quantity || 1,
+                                                    t.paymentMethod?.toUpperCase() || '',
+                                                    `$${((t.price || 0) * (t.quantity || 1)).toFixed(2)}`
+                                                ]];
+                                            }
+                                            return items.map(it => [
+                                                timeStr,
+                                                it.productName,
+                                                it.quantity,
+                                                t.paymentMethod?.toUpperCase() || '',
+                                                `$${(it.price * it.quantity).toFixed(2)}`
+                                            ]);
+                                        });
+
                                         autoTable(doc, {
                                             startY: 38,
-                                            head: [['#', 'Items', 'Payment', 'Tip', 'Total']],
-                                            body: dayData.dayTx.map((t, i) => [
-                                                i + 1,
-                                                getItems(t).map(it => `${it.productName} ×${it.quantity}`).join(', '),
-                                                t.paymentMethod?.toUpperCase() || '',
-                                                t.tip > 0 ? `$${t.tip.toFixed(2)}` : '—',
-                                                `$${(t.totalAmount || 0).toFixed(2)}`,
-                                            ]),
+                                            head: [['Time', 'Product', 'Qty', 'Payment', 'Amount']],
+                                            body: tableBody,
                                             styles: { fontSize: 8, cellPadding: 3 },
                                             headStyles: { fillColor: [10, 132, 255], textColor: 255, fontStyle: 'bold' },
                                             alternateRowStyles: { fillColor: [245, 245, 245] },
-                                            foot: [['', '', '', 'Total', `$${dayData.dayRevenue.toFixed(2)}`]],
+                                            foot: [['', '', '', 'Total Sales', `$${dayData.dayRevenue.toFixed(2)}`]],
                                             footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230] },
                                         });
                                         doc.save(`${emp.name}_${selectedDay}.pdf`);
@@ -730,14 +759,28 @@ function EmployeeDetail({ uid, employees, transactions, onBack }: {
                             <div className="flex items-center gap-2 ml-auto">
                                 <button
                                     onClick={() => {
-                                        const rows = monthData.monthTx.map((t, i) => ({
-                                            '#': i + 1,
-                                            Date: t.date,
-                                            Items: getItems(t).map((it: any) => `${it.productName} ×${it.quantity}`).join(', '),
-                                            Payment: t.paymentMethod?.toUpperCase() || '',
-                                            Tip: t.tip || 0,
-                                            Total: t.totalAmount || 0,
-                                        }));
+                                        const rows = monthData.monthTx.flatMap((t: any) => {
+                                            const timeStr = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                            const items = getItems(t);
+                                            if (items.length === 0) {
+                                                return [{
+                                                    Date: t.date,
+                                                    Time: timeStr,
+                                                    Product: t.productName || 'Custom',
+                                                    Qty: t.quantity || 1,
+                                                    Payment: t.paymentMethod?.toUpperCase() || '',
+                                                    Amount: (t.price || 0) * (t.quantity || 1),
+                                                }];
+                                            }
+                                            return items.map(it => ({
+                                                Date: t.date,
+                                                Time: timeStr,
+                                                Product: it.productName,
+                                                Qty: it.quantity,
+                                                Payment: t.paymentMethod?.toUpperCase() || '',
+                                                Amount: it.price * it.quantity,
+                                            }));
+                                        });
                                         const ws = XLSX.utils.json_to_sheet(rows);
                                         const wb = XLSX.utils.book_new();
                                         XLSX.utils.book_append_sheet(wb, ws, 'Month');
@@ -759,23 +802,37 @@ function EmployeeDetail({ uid, employees, transactions, onBack }: {
                                         doc.setFont('helvetica', 'normal');
                                         doc.setTextColor(120, 120, 120);
                                         doc.text(`Month: ${selectedMonth}`, 14, 26);
-                                        doc.text(`Total: $${monthTotal.toFixed(2)}  |  Tips: $${monthTips.toFixed(2)}  |  Sales: ${monthData.monthTx.length}`, 14, 32);
+                                        doc.text(`Total Sales: $${monthTotal.toFixed(2)}  |  Tips: $${monthTips.toFixed(2)}  |  Orders: ${monthData.monthTx.length}`, 14, 32);
                                         doc.setTextColor(0, 0, 0);
+
+                                        const tableBody = monthData.monthTx.flatMap((t: any) => {
+                                            const items = getItems(t);
+                                            if (items.length === 0) {
+                                                return [[
+                                                    t.date,
+                                                    t.productName || 'Custom',
+                                                    t.quantity || 1,
+                                                    t.paymentMethod?.toUpperCase() || '',
+                                                    `$${((t.price || 0) * (t.quantity || 1)).toFixed(2)}`
+                                                ]];
+                                            }
+                                            return items.map(it => [
+                                                t.date,
+                                                it.productName,
+                                                it.quantity,
+                                                t.paymentMethod?.toUpperCase() || '',
+                                                `$${(it.price * it.quantity).toFixed(2)}`
+                                            ]);
+                                        });
+
                                         autoTable(doc, {
                                             startY: 38,
-                                            head: [['#', 'Date', 'Items', 'Payment', 'Tip', 'Total']],
-                                            body: monthData.monthTx.map((t: any, i: number) => [
-                                                i + 1,
-                                                t.date,
-                                                getItems(t).map((it: any) => `${it.productName} ×${it.quantity}`).join(', '),
-                                                t.paymentMethod?.toUpperCase() || '',
-                                                t.tip > 0 ? `$${t.tip.toFixed(2)}` : '—',
-                                                `$${(t.totalAmount || 0).toFixed(2)}`,
-                                            ]),
+                                            head: [['Date', 'Product', 'Qty', 'Payment', 'Amount']],
+                                            body: tableBody,
                                             styles: { fontSize: 8, cellPadding: 3 },
                                             headStyles: { fillColor: [10, 132, 255], textColor: 255, fontStyle: 'bold' },
                                             alternateRowStyles: { fillColor: [245, 245, 245] },
-                                            foot: [['', '', '', '', 'Total', `$${monthTotal.toFixed(2)}`]],
+                                            foot: [['', '', '', 'Total Sales', `$${monthTotal.toFixed(2)}`]],
                                             footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230] },
                                         });
                                         doc.save(`${emp.name}_${selectedMonth}.pdf`);
@@ -884,19 +941,28 @@ function EmployeeDetail({ uid, employees, transactions, onBack }: {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function EmployeesPage() {
-    const { transactions, loading: txLoading } = useTransactions();
+    const { activeParttime } = useParttime();
+    const { transactions, loading: txLoading } = useTransactions(activeParttime?.id);
     const [selectedUid, setSelectedUid] = useState<string | null>(null);
     const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
     const [adminLoading, setAdminLoading] = useState(true);
 
     useEffect(() => {
-        const unsub = subscribeAdminUsers((data) => {
+        if (!activeParttime) {
+            setAdminUsers([]);
+            setAdminLoading(false);
+            return;
+        }
+        setAdminLoading(true);
+        const unsub = subscribeAdminUsers(activeParttime.id, (data) => {
             setAdminUsers(data);
             setAdminLoading(false);
         });
         return unsub;
-    }, []);
+    }, [activeParttime]);
 
     const employees = useMemo<Employee[]>(() => {
         const map: Record<string, Employee> = {};

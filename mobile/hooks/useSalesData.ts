@@ -33,11 +33,11 @@ export const useSalesData = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [cart, setCart] = useState<TransactionItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const { user } = useAuth();
+    const { user, parttimeId } = useAuth();
     const { logTransactionAdded, logProductSold } = useAnalytics();
 
     useEffect(() => {
-        if (!user) {
+        if (!user || !parttimeId) {
             setTransactions([]);
             setLoading(false);
             return;
@@ -52,7 +52,7 @@ export const useSalesData = () => {
         // to ensure past sales still appear after reload. We can reintroduce a user filter
         // once the data is fully migrated.)
         const q = query(
-            collection(db, 'transactions'),
+            collection(db, 'parttimes', parttimeId, 'transactions'),
             orderBy('timestamp', 'desc')
         );
 
@@ -76,7 +76,7 @@ export const useSalesData = () => {
         return () => {
             unsubscribe();
         };
-    }, [user]);
+    }, [user, parttimeId]);
 
     const addToCart = (item: Omit<TransactionItem, 'id'>) => {
         setCart(prev => {
@@ -120,7 +120,7 @@ export const useSalesData = () => {
     };
 
     const addTransaction = async (transactionData: Omit<Transaction, 'id' | 'timestamp'>) => {
-        if (!user) return;
+        if (!user || !parttimeId) return;
 
         const newTransaction: Omit<Transaction, 'id'> = {
             ...transactionData,
@@ -130,7 +130,7 @@ export const useSalesData = () => {
         };
 
         const db = getDb();
-        const docRef = await addDoc(collection(db, 'transactions'), newTransaction);
+        const docRef = await addDoc(collection(db, 'parttimes', parttimeId, 'transactions'), newTransaction);
 
         // Optimistically update local state so UI reflects the new sale immediately
         setTransactions(prev => {
@@ -148,14 +148,16 @@ export const useSalesData = () => {
     };
 
     const deleteTransaction = async (id: string) => {
+        if (!parttimeId) return;
         const db = getDb();
-        await deleteDoc(doc(db, 'transactions', id));
+        await deleteDoc(doc(db, 'parttimes', parttimeId, 'transactions', id));
     };
 
     const updateTransaction = async (updatedTransaction: Transaction) => {
         const { id, ...data } = updatedTransaction;
+        if (!parttimeId) return;
         const db = getDb();
-        await updateDoc(doc(db, 'transactions', id), data);
+        await updateDoc(doc(db, 'parttimes', parttimeId, 'transactions', id), data);
     };
 
     return {

@@ -25,8 +25,11 @@ function NavHeader({ label, onPrev, onNext }: { label: string; onPrev: () => voi
     );
 }
 
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function AnalyticsPage() {
-    const { transactions: txns, loading: txLoading } = useTransactions();
+    const { activeParttime } = useParttime();
+    const { transactions: txns, loading: txLoading } = useTransactions(activeParttime?.id);
     const analytics = useAnalytics(txns);
 
     // Navigation offsets (negative = further back in time)

@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "Admin dashboard for managing your part-time business",
 };
 
+import { ParttimeProvider } from "@/lib/ParttimeContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,7 +25,9 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${outfit.variable} font-outfit antialiased bg-background text-white`}>
         <AuthProvider>
-          {children}
+          <ParttimeProvider>
+            {children}
+          </ParttimeProvider>
         </AuthProvider>
       </body>
     </html>

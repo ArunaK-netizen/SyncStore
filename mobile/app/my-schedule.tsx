@@ -23,7 +23,7 @@ function calcDuration(start: string, end: string): string {
     const mins = (eh * 60 + em) - (sh * 60 + sm);
     if (mins <= 0) return '';
     const h = Math.floor(mins / 60), m = mins % 60;
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    return m > 0 ? `${h} h ${m} m` : `${h} h`;
 }
 
 export default function MySchedulePage() {
@@ -51,8 +51,8 @@ export default function MySchedulePage() {
         return sum + Math.max(0, (eh * 60 + em) - (sh * 60 + sm));
     }, 0);
     const totalHours = totalMins > 0
-        ? (totalMins % 60 > 0 ? `${Math.floor(totalMins / 60)}h ${totalMins % 60}m` : `${Math.floor(totalMins / 60)}h`)
-        : '0h';
+        ? (totalMins % 60 > 0 ? `${Math.floor(totalMins / 60)} h ${totalMins % 60} m` : `${Math.floor(totalMins / 60)} h`)
+        : '0 h';
 
     return (
         <View style={[styles.container, isDark && styles.containerDark]}>

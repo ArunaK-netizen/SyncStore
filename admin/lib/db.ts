@@ -84,8 +84,9 @@ export type ScheduleEntry = {
 };
 
 // --- Transactions ---
-export function subscribeTransactions(callback: (data: Transaction[]) => void) {
-    const q = query(collection(db, 'transactions'), orderBy('timestamp', 'desc'));
+export function subscribeTransactions(parttimeId: string, callback: (data: Transaction[]) => void) {
+    if (!parttimeId) return () => { };
+    const q = query(collection(db, 'parttimes', parttimeId, 'transactions'), orderBy('timestamp', 'desc'));
     return onSnapshot(q, (snap) => {
         const data: Transaction[] = [];
         const seen = new Set<string>();
@@ -98,13 +99,15 @@ export function subscribeTransactions(callback: (data: Transaction[]) => void) {
     });
 }
 
-export async function deleteTransaction(id: string) {
-    await deleteDoc(doc(db, 'transactions', id));
+export async function deleteTransaction(parttimeId: string, id: string) {
+    if (!parttimeId) return;
+    await deleteDoc(doc(db, 'parttimes', parttimeId, 'transactions', id));
 }
 
 // --- Products ---
-export function subscribeProducts(callback: (data: Product[]) => void) {
-    const q = query(collection(db, 'products'));
+export function subscribeProducts(parttimeId: string, callback: (data: Product[]) => void) {
+    if (!parttimeId) return () => { };
+    const q = query(collection(db, 'parttimes', parttimeId, 'products'));
     return onSnapshot(q, (snap) => {
         const data: Product[] = [];
         snap.forEach((d) => data.push({ id: d.id, ...d.data() } as Product));
@@ -112,39 +115,57 @@ export function subscribeProducts(callback: (data: Product[]) => void) {
     });
 }
 
-export async function addProduct(data: Omit<Product, 'id'>) {
-    await addDoc(collection(db, 'products'), data);
+export async function addProduct(parttimeId: string, data: Omit<Product, 'id'>) {
+    if (!parttimeId) throw new Error("parttimeId required");
+    await addDoc(collection(db, 'parttimes', parttimeId, 'products'), data);
 }
 
-export async function updateProduct(id: string, data: Partial<Product>) {
+export async function updateProduct(parttimeId: string, id: string, data: Partial<Product>) {
+    if (!parttimeId) throw new Error("parttimeId required");
     const { id: _id, ...rest } = data as Partial<Product> & { id?: string };
-    await updateDoc(doc(db, 'products', id), rest as Record<string, unknown>);
+    await updateDoc(doc(db, 'parttimes', parttimeId, 'products', id), rest as Record<string, unknown>);
 }
 
-export async function deleteProduct(id: string) {
-    await deleteDoc(doc(db, 'products', id));
+export async function deleteProduct(parttimeId: string, id: string) {
+    if (!parttimeId) return;
+    await deleteDoc(doc(db, 'parttimes', parttimeId, 'products', id));
 }
 
-// --- Admin Users ---
-export function subscribeAdminUsers(callback: (data: AdminUser[]) => void) {
-    return onSnapshot(collection(db, 'admin_users'), (snap) => {
+// --- Admin Users (Global admin_users for mobile auth, but managed per parttime requested) ---
+export function subscribeAdminUsers(parttimeId: string, callback: (data: AdminUser[]) => void) {
+    if (!parttimeId) return () => { };
+    return onSnapshot(collection(db, 'parttimes', parttimeId, 'approved_users'), (snap) => {
         const data: AdminUser[] = [];
         snap.forEach((d) => data.push({ id: d.id, ...d.data() } as AdminUser));
         callback(data);
     });
 }
 
-export async function addAdminUser(user: Omit<AdminUser, 'id'>) {
-    await addDoc(collection(db, 'admin_users'), user);
+export async function addAdminUser(parttimeId: string, user: Omit<AdminUser, 'id'>) {
+    if (!parttimeId) throw new Error("parttimeId required");
+    // We add to the parttime's approved_users so they are listed in this parttime's dashboard
+    await addDoc(collection(db, 'parttimes', parttimeId, 'approved_users'), user);
+    // Also add to global user_routing so mobile knows where to put them when they log in
+    await updateDoc(doc(db, 'user_routing', user.uid), { parttimeId } as Record<string, unknown>).catch(async () => {
+        // create if it doesn't exist
+        const { setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'user_routing', user.uid), { parttimeId });
+    });
 }
 
-export async function removeAdminUser(id: string) {
-    await deleteDoc(doc(db, 'admin_users', id));
+export async function removeAdminUser(parttimeId: string, id: string, uid?: string) {
+    if (!parttimeId) return;
+    await deleteDoc(doc(db, 'parttimes', parttimeId, 'approved_users', id));
+    if (uid) {
+        await deleteDoc(doc(db, 'user_routing', uid)).catch(() => { });
+    }
 }
 
-// --- Admin Config (whitelist) ---
-export async function getAdminEmails(): Promise<string[]> {
-    const snap = await getDocs(collection(db, 'admin_config'));
+// --- Admin Config (whitelist - Global Super Admins are in Global, Parttime Admins are in Parttime doc) ---
+// For now, keeping global config for simplicity during migration, future update will split this
+export async function getAdminEmails(parttimeId: string): Promise<string[]> {
+    if (!parttimeId) return [];
+    const snap = await getDocs(collection(db, 'parttimes', parttimeId, 'admin_config'));
     const emails: string[] = [];
     snap.forEach((d) => {
         const data = d.data();
@@ -155,9 +176,9 @@ export async function getAdminEmails(): Promise<string[]> {
     return emails;
 }
 
-// Live subscription + mutation helpers for admin panel access
-export function subscribeAdminEmails(callback: (emails: string[]) => void) {
-    return onSnapshot(collection(db, 'admin_config'), (snap) => {
+export function subscribeAdminEmails(parttimeId: string, callback: (emails: string[]) => void) {
+    if (!parttimeId) return () => { };
+    return onSnapshot(collection(db, 'parttimes', parttimeId, 'admin_config'), (snap) => {
         const emails: string[] = [];
         snap.forEach((d) => {
             const data = d.data();
@@ -167,11 +188,11 @@ export function subscribeAdminEmails(callback: (emails: string[]) => void) {
     });
 }
 
-export async function addAdminEmail(email: string) {
-    const snap = await getDocs(collection(db, 'admin_config'));
+export async function addAdminEmail(parttimeId: string, email: string) {
+    if (!parttimeId) return;
+    const snap = await getDocs(collection(db, 'parttimes', parttimeId, 'admin_config'));
     if (snap.empty) {
-        // Create the config doc if it doesn't exist yet
-        await addDoc(collection(db, 'admin_config'), { adminEmails: [email] });
+        await addDoc(collection(db, 'parttimes', parttimeId, 'admin_config'), { adminEmails: [email] });
     } else {
         const docRef = snap.docs[0].ref;
         const existing: string[] = snap.docs[0].data().adminEmails || [];
@@ -181,8 +202,9 @@ export async function addAdminEmail(email: string) {
     }
 }
 
-export async function removeAdminEmail(email: string) {
-    const snap = await getDocs(collection(db, 'admin_config'));
+export async function removeAdminEmail(parttimeId: string, email: string) {
+    if (!parttimeId) return;
+    const snap = await getDocs(collection(db, 'parttimes', parttimeId, 'admin_config'));
     if (snap.empty) return;
     const docRef = snap.docs[0].ref;
     const existing: string[] = snap.docs[0].data().adminEmails || [];
@@ -190,8 +212,9 @@ export async function removeAdminEmail(email: string) {
 }
 
 // --- Access Requests ---
-export function subscribeAccessRequests(callback: (data: AccessRequest[]) => void) {
-    const q = query(collection(db, 'access_requests'), orderBy('requestedAt', 'desc'));
+export function subscribeAccessRequests(parttimeId: string, callback: (data: AccessRequest[]) => void) {
+    if (!parttimeId) return () => { };
+    const q = query(collection(db, 'parttimes', parttimeId, 'access_requests'), orderBy('requestedAt', 'desc'));
     return onSnapshot(q, (snap) => {
         const data: AccessRequest[] = [];
         snap.forEach((d) => data.push({ id: d.id, ...d.data() } as AccessRequest));
@@ -199,31 +222,37 @@ export function subscribeAccessRequests(callback: (data: AccessRequest[]) => voi
     });
 }
 
-export async function approveAccessRequest(request: AccessRequest) {
+export async function approveAccessRequest(parttimeId: string, request: AccessRequest) {
+    if (!parttimeId) throw new Error("parttimeId required");
     // 1. Mark the request as approved
-    await updateDoc(doc(db, 'access_requests', request.id), { status: 'approved' } as Record<string, unknown>);
-    // 2. Add to admin_users so the mobile app lets them in
-    const existing = await getDocs(
-        query(collection(db, 'admin_users'))
-    );
+    await updateDoc(doc(db, 'parttimes', parttimeId, 'access_requests', request.id), { status: 'approved' } as Record<string, unknown>);
+
+    // 2. Add to parttime's approved_users
+    const existing = await getDocs(query(collection(db, 'parttimes', parttimeId, 'approved_users')));
     const alreadyAdded = existing.docs.some(d => d.data().uid === request.uid);
     if (!alreadyAdded) {
-        await addDoc(collection(db, 'admin_users'), {
+        await addDoc(collection(db, 'parttimes', parttimeId, 'approved_users'), {
             uid: request.uid,
             email: request.email,
             name: request.name,
             addedAt: Date.now(),
         });
     }
+
+    // 3. Update global routing
+    const { setDoc } = await import('firebase/firestore');
+    await setDoc(doc(db, 'user_routing', request.uid), { parttimeId });
 }
 
-export async function rejectAccessRequest(id: string) {
-    await updateDoc(doc(db, 'access_requests', id), { status: 'rejected' } as Record<string, unknown>);
+export async function rejectAccessRequest(parttimeId: string, id: string) {
+    if (!parttimeId) return;
+    await updateDoc(doc(db, 'parttimes', parttimeId, 'access_requests', id), { status: 'rejected' } as Record<string, unknown>);
 }
 
 // --- Announcements ---
-export function subscribeAnnouncements(callback: (data: Announcement[]) => void) {
-    const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+export function subscribeAnnouncements(parttimeId: string, callback: (data: Announcement[]) => void) {
+    if (!parttimeId) return () => { };
+    const q = query(collection(db, 'parttimes', parttimeId, 'announcements'), orderBy('createdAt', 'desc'));
     return onSnapshot(q, (snap) => {
         const data: Announcement[] = [];
         snap.forEach((d) => data.push({ id: d.id, ...d.data() } as Announcement));
@@ -231,17 +260,20 @@ export function subscribeAnnouncements(callback: (data: Announcement[]) => void)
     });
 }
 
-export async function addAnnouncement(data: Omit<Announcement, 'id'>) {
-    await addDoc(collection(db, 'announcements'), data);
+export async function addAnnouncement(parttimeId: string, data: Omit<Announcement, 'id'>) {
+    if (!parttimeId) throw new Error("parttimeId required");
+    await addDoc(collection(db, 'parttimes', parttimeId, 'announcements'), data);
 }
 
-export async function deleteAnnouncement(id: string) {
-    await deleteDoc(doc(db, 'announcements', id));
+export async function deleteAnnouncement(parttimeId: string, id: string) {
+    if (!parttimeId) return;
+    await deleteDoc(doc(db, 'parttimes', parttimeId, 'announcements', id));
 }
 
 // --- Schedules ---
-export function subscribeSchedules(callback: (data: ScheduleEntry[]) => void) {
-    const q = query(collection(db, 'schedules'), orderBy('date', 'asc'));
+export function subscribeSchedules(parttimeId: string, callback: (data: ScheduleEntry[]) => void) {
+    if (!parttimeId) return () => { };
+    const q = query(collection(db, 'parttimes', parttimeId, 'schedules'), orderBy('date', 'asc'));
     return onSnapshot(q, (snap) => {
         const data: ScheduleEntry[] = [];
         snap.forEach((d) => data.push({ id: d.id, ...d.data() } as ScheduleEntry));
@@ -249,15 +281,18 @@ export function subscribeSchedules(callback: (data: ScheduleEntry[]) => void) {
     });
 }
 
-export async function addScheduleEntry(entry: Omit<ScheduleEntry, 'id'>) {
-    await addDoc(collection(db, 'schedules'), entry);
+export async function addScheduleEntry(parttimeId: string, entry: Omit<ScheduleEntry, 'id'>) {
+    if (!parttimeId) throw new Error("parttimeId required");
+    await addDoc(collection(db, 'parttimes', parttimeId, 'schedules'), entry);
 }
 
-export async function updateScheduleEntry(id: string, data: Partial<ScheduleEntry>) {
+export async function updateScheduleEntry(parttimeId: string, id: string, data: Partial<ScheduleEntry>) {
+    if (!parttimeId) throw new Error("parttimeId required");
     const { id: _id, ...rest } = data as Partial<ScheduleEntry> & { id?: string };
-    await updateDoc(doc(db, 'schedules', id), rest as Record<string, unknown>);
+    await updateDoc(doc(db, 'parttimes', parttimeId, 'schedules', id), rest as Record<string, unknown>);
 }
 
-export async function deleteScheduleEntry(id: string) {
-    await deleteDoc(doc(db, 'schedules', id));
+export async function deleteScheduleEntry(parttimeId: string, id: string) {
+    if (!parttimeId) return;
+    await deleteDoc(doc(db, 'parttimes', parttimeId, 'schedules', id));
 }

@@ -6,8 +6,11 @@ import { useAuth } from '@/lib/AuthContext';
 import { Megaphone, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function AnnouncementsPage() {
     const { user } = useAuth();
+    const { activeParttime } = useParttime();
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAdd, setShowAdd] = useState(false);
@@ -16,18 +19,24 @@ export default function AnnouncementsPage() {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsub = subscribeAnnouncements((data) => {
+        if (!activeParttime) {
+            setAnnouncements([]);
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        const unsub = subscribeAnnouncements(activeParttime.id, (data) => {
             setAnnouncements(data);
             setLoading(false);
         });
         return unsub;
-    }, []);
+    }, [activeParttime]);
 
     const handleAdd = async () => {
-        if (!form.title.trim() || !form.body.trim()) return;
+        if (!form.title.trim() || !form.body.trim() || !activeParttime) return;
         setSaving(true);
         try {
-            await addAnnouncement({
+            await addAnnouncement(activeParttime.id, {
                 title: form.title.trim(),
                 body: form.body.trim(),
                 createdAt: Date.now(),
@@ -41,8 +50,9 @@ export default function AnnouncementsPage() {
     };
 
     const handleDelete = async (id: string) => {
+        if (!activeParttime) return;
         if (confirmDelete !== id) { setConfirmDelete(id); return; }
-        await deleteAnnouncement(id);
+        await deleteAnnouncement(activeParttime.id, id);
         setConfirmDelete(null);
     };
 

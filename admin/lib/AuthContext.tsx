@@ -24,27 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                // Check if this user's email is in admin list
-                try {
-                    const adminEmails = await getAdminEmails();
-                    const email = firebaseUser.email?.toLowerCase() ?? '';
-                    if (adminEmails.length === 0 || adminEmails.map(e => e.toLowerCase()).includes(email)) {
-                        // If no admin emails configured yet, allow any signed-in user (setup mode)
-                        setUser(firebaseUser);
-                        setIsAdmin(true);
-                        setUnauthorized(false);
-                    } else {
-                        setUnauthorized(true);
-                        setIsAdmin(false);
-                        setUser(null);
-                        await signOut(auth);
-                    }
-                } catch {
-                    // If we can't read admin config (e.g. permissions not set up), allow first login
-                    setUser(firebaseUser);
-                    setIsAdmin(true);
-                    setUnauthorized(false);
-                }
+                // We no longer check admin status here because we don't know the parttime yet.
+                // The ParttimeSelector / ParttimeContext will handle admin verification
+                // for the specific chosen parttime.
+                setUser(firebaseUser);
+                setIsAdmin(true); // Temporarily true so they can reach the Parttime selector
+                setUnauthorized(false);
             } else {
                 setUser(null);
                 setIsAdmin(false);

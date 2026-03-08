@@ -24,7 +24,7 @@ export default function Login() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setLoadingGoogle(true);
       await signInWithGoogle();
-      router.replace('/(tabs)/dashboard');
+      router.replace('/');
     } catch (error) {
       console.error(error);
     } finally {
@@ -34,19 +34,19 @@ export default function Login() {
 
   // If we're already authenticated, never show the login UI.
   if (!authLoading && user) {
-    return <Redirect href="/(tabs)/dashboard" />;
+    return <Redirect href="/" />;
   }
 
   if (authLoading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}> 
+      <View style={[styles.loadingContainer, { backgroundColor: themeColors.background }]}>
         <ActivityIndicator size="large" color={themeColors.tint} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? '#151718' : '#fff' }]}> 
+    <View style={[styles.container, { backgroundColor: isDark ? '#151718' : '#fff' }]}>
       <Text style={[styles.title, { color: isDark ? '#fff' : '#11181C' }]}>Welcome to Parttime</Text>
       <Text style={[styles.subtitle, { color: isDark ? '#ECEDEE' : '#687076', fontWeight: '400' }]}>Sign in to continue</Text>
 
@@ -69,7 +69,7 @@ export default function Login() {
           color={'#fff'}
           style={styles.buttonIcon}
         />
-        <Text style={[styles.googleButtonText, { color: '#fff', fontWeight: '600' }]}> 
+        <Text style={[styles.googleButtonText, { color: '#fff', fontWeight: '600' }]}>
           {loadingGoogle ? 'Signing in...' : 'Continue with Google'}
         </Text>
       </TouchableOpacity>

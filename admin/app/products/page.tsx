@@ -6,8 +6,11 @@ import { useProducts } from '@/lib/hooks';
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function ProductsPage() {
-    const { products, loading } = useProducts();
+    const { activeParttime } = useParttime();
+    const { products, loading } = useProducts(activeParttime?.id);
     const [showAdd, setShowAdd] = useState(false);
     const [editing, setEditing] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -45,25 +48,26 @@ export default function ProductsPage() {
     };
 
     const handleAdd = async () => {
-        if (!form.name || !form.price || !form.category) return;
+        if (!form.name || !form.price || !form.category || !activeParttime) return;
         setSaving(true);
         try {
-            await addProduct({ name: form.name.trim(), price: parseFloat(form.price), category: form.category.trim().toLowerCase() });
+            await addProduct(activeParttime.id, { name: form.name.trim(), price: parseFloat(form.price), category: form.category.trim().toLowerCase() });
             setForm({ name: '', price: '', category: '' });
             setShowAdd(false);
         } finally { setSaving(false); }
     };
 
     const handleEdit = async (id: string) => {
-        if (!editForm.name || !editForm.price || !editForm.category) return;
+        if (!editForm.name || !editForm.price || !editForm.category || !activeParttime) return;
         setSaving(true);
-        try { await updateProduct(id, editForm); setEditing(null); }
+        try { await updateProduct(activeParttime.id, id, editForm); setEditing(null); }
         finally { setSaving(false); }
     };
 
     const handleDelete = async (id: string) => {
+        if (!activeParttime) return;
         if (confirmDelete !== id) { setConfirmDelete(id); return; }
-        await deleteProduct(id);
+        await deleteProduct(activeParttime.id, id);
         setConfirmDelete(null);
     };
 

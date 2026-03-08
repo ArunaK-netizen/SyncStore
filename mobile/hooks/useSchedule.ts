@@ -38,12 +38,12 @@ export function formatShiftTime(t: string): string {
 }
 
 export const useSchedule = () => {
-    const { user } = useAuth();
+    const { user, parttimeId } = useAuth();
     const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user) {
+        if (!user || !parttimeId) {
             setSchedules([]);
             setLoading(false);
             return;
@@ -53,7 +53,7 @@ export const useSchedule = () => {
         // Using only `where` (no orderBy) avoids the Firestore composite index requirement.
         // We sort client-side instead.
         const q = query(
-            collection(db, 'schedules'),
+            collection(db, 'parttimes', parttimeId, 'schedules'),
             where('employeeUid', '==', user.uid),
         );
 
@@ -69,7 +69,7 @@ export const useSchedule = () => {
         });
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, parttimeId]);
 
     return { schedules, loading };
 };

@@ -7,15 +7,17 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getDb } from '../firebase';
 
-export type AccessStatus = 'checking' | 'pending' | 'approved' | 'rejected';
+export type AccessStatus = 'checking' | 'needsCode' | 'pending' | 'approved' | 'rejected';
 
 interface AuthContextType {
   user: FirebaseAuthTypes.User | null;
   loading: boolean;
   accessStatus: AccessStatus;
+  parttimeId: string | null;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateDisplayName: (name: string) => Promise<void>;
+  refreshAccessStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +27,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessStatus, setAccessStatus] = useState<AccessStatus>('checking');
+  const [parttimeId, setParttimeId] = useState<string | null>(null);
+  const db = getDb();
+  let unsubRequestRef = React.useRef<(() => void) | undefined>();
 
   useEffect(() => {
     async function init() {
@@ -68,64 +73,81 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => clearTimeout(timeout);
   }, [loading]);
 
-  // ── Access status subscription ───────────────────────────────────────────
-  // Whenever user changes, check admin_users (fast path) then subscribe to
-  // their access_request document for live status updates.
-  useEffect(() => {
+  // ── Access status logic ───────────────────────────────────────────
+  const resolveAccess = React.useCallback(async () => {
     if (!user) return;
 
-    const db = getDb();
-    let unsubRequest: (() => void) | undefined;
-
-    async function resolveAccess() {
-      if (!user) return;
-
-      setLoading(true);
-      setAccessStatus('checking');
-
-      // 1. Fast path: already in admin_users (approved)
-      const adminQ = query(
-        collection(db, 'admin_users'),
-        where('uid', '==', user.uid),
-      );
-      const adminSnap = await adminQ.get().catch(() => null);
-      if (adminSnap && !adminSnap.empty) {
-        setAccessStatus('approved');
-        setLoading(false);
-        return;
-      }
-
-      // 2. Create or fetch their access_request document (keyed by uid)
-      const reqRef = doc(db, 'access_requests', user.uid);
-      const existing = await getDoc(reqRef).catch(() => null);
-      if (!existing || !existing.exists) {
-        // First time: create a pending request
-        await setDoc(reqRef, {
-          uid: user.uid,
-          email: user.email || '',
-          name: user.displayName || user.email || 'Unknown',
-          photoURL: user.photoURL || '',
-          requestedAt: Date.now(),
-          status: 'pending',
-        }).catch(console.error);
-      }
-
-      // 3. Subscribe to the document for live updates (approved or rejected)
-      unsubRequest = onSnapshot(reqRef, (snap) => {
-        const data = snap.data();
-        if (!data) return;
-        const status = data.status as AccessStatus;
-        setAccessStatus(status);
-        setLoading(false);
-      }, () => {
-        setAccessStatus('pending');
-        setLoading(false);
-      });
+    if (unsubRequestRef.current) {
+      unsubRequestRef.current();
+      unsubRequestRef.current = undefined;
     }
 
+    setLoading(true);
+    setAccessStatus('checking');
+
+    // 1. Check user_routing to get parttimeId
+    const routingRef = doc(db, 'user_routing', user.uid);
+    const routingSnap = await getDoc(routingRef).catch(() => null);
+
+    if (!routingSnap || !routingSnap.exists) {
+      setAccessStatus('needsCode');
+      setLoading(false);
+      return;
+    }
+
+    const pId = routingSnap.data()?.parttimeId;
+    if (!pId) {
+      setAccessStatus('needsCode');
+      setLoading(false);
+      return;
+    }
+
+    setParttimeId(pId);
+
+    // 2. Fast path: check if in approved_users (replaces admin_users)
+    const approvedQ = query(
+      collection(db, 'parttimes', pId, 'approved_users'),
+      where('uid', '==', user.uid),
+    );
+    const approvedSnap = await approvedQ.get().catch(() => null);
+    if (approvedSnap && !approvedSnap.empty) {
+      setAccessStatus('approved');
+      setLoading(false);
+      return;
+    }
+
+    // 3. Create or fetch their access_request document (keyed by uid) inside the parttime
+    const reqRef = doc(db, 'parttimes', pId, 'access_requests', user.uid);
+    const existing = await getDoc(reqRef).catch(() => null);
+    if (!existing || !existing.exists) {
+      // First time: create a pending request
+      await setDoc(reqRef, {
+        uid: user.uid,
+        email: user.email || '',
+        name: user.displayName || user.email || 'Unknown',
+        photoURL: user.photoURL || '',
+        requestedAt: Date.now(),
+        status: 'pending',
+      }).catch(console.error);
+    }
+
+    // 4. Subscribe to the document for live updates
+    unsubRequestRef.current = onSnapshot(reqRef, (snap) => {
+      const data = snap.data();
+      if (!data) return;
+      const status = data.status as AccessStatus;
+      setAccessStatus(status);
+      setLoading(false);
+    }, () => {
+      setAccessStatus('pending');
+      setLoading(false);
+    });
+  }, [user]);
+
+  useEffect(() => {
     resolveAccess();
-    return () => { if (unsubRequest) unsubRequest(); };
-  }, [user?.uid]);
+    return () => { if (unsubRequestRef.current) unsubRequestRef.current(); };
+  }, [resolveAccess]);
 
   const signInWithGoogle = async () => {
     try {
@@ -168,7 +190,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, accessStatus, signInWithGoogle, logout, updateDisplayName }}>
+    <AuthContext.Provider value={{
+      user, loading, accessStatus, parttimeId,
+      signInWithGoogle, logout, updateDisplayName, refreshAccessStatus: resolveAccess
+    }}>
       {children}
     </AuthContext.Provider>
   );

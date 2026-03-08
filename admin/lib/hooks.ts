@@ -2,32 +2,44 @@
 import { Product, subscribeProducts, subscribeTransactions, Transaction } from '@/lib/db';
 import { useEffect, useState } from 'react';
 
-export function useTransactions() {
+export function useTransactions(parttimeId: string | undefined) {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsub = subscribeTransactions((data) => {
+        if (!parttimeId) {
+            setTransactions([]);
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        const unsub = subscribeTransactions(parttimeId, (data) => {
             setTransactions(data);
             setLoading(false);
         });
         return unsub;
-    }, []);
+    }, [parttimeId]);
 
     return { transactions, loading };
 }
 
-export function useProducts() {
+export function useProducts(parttimeId: string | undefined) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsub = subscribeProducts((data) => {
+        if (!parttimeId) {
+            setProducts([]);
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        const unsub = subscribeProducts(parttimeId, (data) => {
             setProducts(data);
             setLoading(false);
         });
         return unsub;
-    }, []);
+    }, [parttimeId]);
 
     return { products, loading };
 }

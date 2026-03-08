@@ -6,7 +6,10 @@ import { useTransactions } from '@/lib/hooks';
 import { Plus, Shield, ShieldCheck, Trash2, Users, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function UsersPage() {
+    const { activeParttime } = useParttime();
     const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
     const [adminEmails, setAdminEmails] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -15,7 +18,7 @@ export default function UsersPage() {
     const [saving, setSaving] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'whitelist' | 'admins' | 'employees'>('whitelist');
-    const { transactions, loading: txLoading } = useTransactions();
+    const { transactions, loading: txLoading } = useTransactions(activeParttime?.id);
 
     // Access requests
     const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
@@ -27,18 +30,26 @@ export default function UsersPage() {
     const [confirmRemoveEmail, setConfirmRemoveEmail] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsub1 = subscribeAdminUsers((data) => {
+        if (!activeParttime) {
+            setAdminUsers([]);
+            setAdminEmails([]);
+            setAccessRequests([]);
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        const unsub1 = subscribeAdminUsers(activeParttime.id, (data) => {
             setAdminUsers(data);
             setLoading(false);
         });
-        const unsub2 = subscribeAdminEmails((emails) => {
+        const unsub2 = subscribeAdminEmails(activeParttime.id, (emails) => {
             setAdminEmails(emails);
         });
-        const unsub3 = subscribeAccessRequests((data) => {
+        const unsub3 = subscribeAccessRequests(activeParttime.id, (data) => {
             setAccessRequests(data);
         });
         return () => { unsub1(); unsub2(); unsub3(); };
-    }, []);
+    }, [activeParttime]);
 
     const employeesFromTx = useMemo(() => {
         const map: Record<string, { uid: string; name: string; revenue: number; txCount: number; lastDate: string }> = {};
@@ -64,10 +75,10 @@ export default function UsersPage() {
         transactions.filter(t => t.userId === uid).reduce((s, t) => s + (t.totalAmount || 0), 0);
 
     const handleAdd = async () => {
-        if (!form.email) return;
+        if (!form.email || !activeParttime) return;
         setSaving(true);
         try {
-            await addAdminUser({
+            await addAdminUser(activeParttime.id, {
                 uid: form.uid.trim() || form.email.trim(),
                 email: form.email.trim(),
                 name: form.name.trim(),
@@ -81,17 +92,18 @@ export default function UsersPage() {
     };
 
     const handleRemove = async (id: string) => {
+        if (!activeParttime) return;
         if (confirmDelete !== id) { setConfirmDelete(id); return; }
-        await removeAdminUser(id);
+        await removeAdminUser(activeParttime.id, id);
         setConfirmDelete(null);
     };
 
     const handleAddAdminEmail = async () => {
         const email = adminEmailInput.trim().toLowerCase();
-        if (!email || !email.includes('@')) return;
+        if (!email || !email.includes('@') || !activeParttime) return;
         setAdminEmailSaving(true);
         try {
-            await addAdminEmail(email);
+            await addAdminEmail(activeParttime.id, email);
             setAdminEmailInput('');
         } finally {
             setAdminEmailSaving(false);
@@ -99,18 +111,21 @@ export default function UsersPage() {
     };
 
     const handleApprove = async (req: AccessRequest) => {
+        if (!activeParttime) return;
         setActioningRequest(req.id);
-        try { await approveAccessRequest(req); } finally { setActioningRequest(null); }
+        try { await approveAccessRequest(activeParttime.id, req); } finally { setActioningRequest(null); }
     };
 
     const handleReject = async (req: AccessRequest) => {
+        if (!activeParttime) return;
         setActioningRequest(req.id);
-        try { await rejectAccessRequest(req.id); } finally { setActioningRequest(null); }
+        try { await rejectAccessRequest(activeParttime.id, req.id); } finally { setActioningRequest(null); }
     };
 
     const handleRemoveAdminEmail = async (email: string) => {
+        if (!activeParttime) return;
         if (confirmRemoveEmail !== email) { setConfirmRemoveEmail(email); return; }
-        await removeAdminEmail(email);
+        await removeAdminEmail(activeParttime.id, email);
         setConfirmRemoveEmail(null);
     };
 

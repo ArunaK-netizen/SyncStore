@@ -21,17 +21,16 @@ type ProductContextType = {
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export const ProductProvider = ({ children }: { children: React.ReactNode }) => {
-    const { user } = useAuth();
+    const { user, parttimeId } = useAuth();
     const [products, setProducts] = useState<Record<string, Product[]>>({});
     const [loading, setLoading] = useState(true);
 
-    // Single shared cache key — products belong to the store, not a specific user
-    const PRODUCTS_CACHE_KEY = 'products_cache_global';
+    const PRODUCTS_CACHE_KEY = parttimeId ? `products_cache_${parttimeId}` : 'products_cache_global';
 
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
 
-        if (user) {
+        if (user && parttimeId) {
             loadProductsWithCache().then((unsub) => {
                 unsubscribe = unsub;
             });
@@ -45,11 +44,11 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
                 unsubscribe();
             }
         };
-    }, [user]);
+    }, [user, parttimeId]);
 
     // Load from cache first, then Firestore
     const loadProductsWithCache = async () => {
-        if (!user) {
+        if (!user || !parttimeId) {
             setProducts({});
             setLoading(false);
             return;
@@ -71,12 +70,12 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
     };
 
     const loadProductsFromFirestore = () => {
-        if (!user) return () => { };
+        if (!user || !parttimeId) return () => { };
 
         const db = getDb();
-        // Products are shared store-wide — not scoped per user
+        // Products belong to the specific parttime
         const q = query(
-            collection(db, 'products'),
+            collection(db, 'parttimes', parttimeId, 'products'),
         );
         const unsubscribe = onSnapshot(q, async (querySnapshot) => {
             const productsData: Record<string, Product[]> = {};

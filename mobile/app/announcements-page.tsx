@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
     ActivityIndicator,
+    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -30,13 +31,19 @@ export default function AnnouncementsPage() {
     const router = useRouter();
     const { colorScheme } = useTheme();
     const isDark = colorScheme === 'dark';
-    const { announcements, loading, markAsRead } = useAnnouncements();
+    const { announcements, readIds, loading, markAsRead, hideAnnouncement } = useAnnouncements();
+    const [hideTarget, setHideTarget] = useState<{ id: string, title: string } | null>(null);
 
-    useFocusEffect(
-        useCallback(() => {
-            markAsRead();
-        }, [])
-    );
+    const handleHide = (id: string, title: string) => {
+        setHideTarget({ id, title });
+    };
+
+    const confirmHide = () => {
+        if (hideTarget) {
+            hideAnnouncement(hideTarget.id);
+            setHideTarget(null);
+        }
+    };
 
     return (
         <View style={[styles.container, isDark && styles.containerDark]}>
@@ -67,24 +74,29 @@ export default function AnnouncementsPage() {
                             {announcements.length} announcement{announcements.length !== 1 ? 's' : ''}
                         </Text>
                         {announcements.map((ann, index) => {
-                            const isRecent = Date.now() - ann.createdAt < 3 * 86400000;
+                            const isUnread = !readIds.includes(ann.id);
                             return (
                                 <View key={ann.id} style={[styles.card, isDark && styles.cardDark]}>
                                     {/* Top row */}
                                     <View style={styles.cardTop}>
-                                        <View style={[styles.iconWrap, isRecent && styles.iconWrapRecent]}>
+                                        <View style={[styles.iconWrap, isUnread && styles.iconWrapRecent]}>
                                             <Ionicons
-                                                name={isRecent ? 'megaphone' : 'megaphone-outline'}
+                                                name={isUnread ? 'megaphone' : 'megaphone-outline'}
                                                 size={18}
-                                                color={isRecent ? '#fff' : '#8e8e93'}
+                                                color={isUnread ? '#fff' : '#8e8e93'}
                                             />
                                         </View>
                                         <View style={styles.cardMeta}>
-                                            <Text style={[styles.cardTitle, isDark && styles.cardTitleDark]} numberOfLines={2}>
-                                                {ann.title}
-                                            </Text>
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <Text style={[styles.cardTitle, isDark && styles.cardTitleDark, { flex: 1, marginRight: 8 }]} numberOfLines={2}>
+                                                    {ann.title}
+                                                </Text>
+                                                <TouchableOpacity onPress={() => handleHide(ann.id, ann.title)} style={{ padding: 4, margin: -4 }}>
+                                                    <Ionicons name="close" size={20} color="#8e8e93" />
+                                                </TouchableOpacity>
+                                            </View>
                                             <View style={styles.metaRow}>
-                                                {isRecent && (
+                                                {isUnread && (
                                                     <View style={styles.newBadge}>
                                                         <Text style={styles.newBadgeText}>NEW</Text>
                                                     </View>
@@ -101,10 +113,17 @@ export default function AnnouncementsPage() {
 
                                     {/* Footer */}
                                     <View style={[styles.cardFooter, isDark && styles.cardFooterDark]}>
-                                        <Ionicons name="person-circle-outline" size={14} color="#8e8e93" />
-                                        <Text style={styles.footerText}>{ann.createdBy}</Text>
-                                        <Text style={styles.footerDot}>·</Text>
-                                        <Text style={styles.footerText}>{formatDate(ann.createdAt)}</Text>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                            <Ionicons name="person-circle-outline" size={14} color="#8e8e93" />
+                                            <Text style={styles.footerText}>{ann.createdBy}</Text>
+                                            <Text style={styles.footerDot}>·</Text>
+                                            <Text style={styles.footerText}>{formatDate(ann.createdAt)}</Text>
+                                        </View>
+                                        {isUnread && (
+                                            <TouchableOpacity onPress={() => markAsRead(ann.id)} style={{ marginLeft: 'auto', paddingLeft: 12, paddingVertical: 4 }}>
+                                                <Text style={{ fontSize: 13, color: '#0A84FF', fontFamily: 'Outfit_600SemiBold' }}>Mark Read</Text>
+                                            </TouchableOpacity>
+                                        )}
                                     </View>
                                 </View>
                             );
@@ -113,6 +132,26 @@ export default function AnnouncementsPage() {
                     </ScrollView>
                 )}
             </SafeAreaView>
+
+            {/* Custom Modal for Hiding Announcements */}
+            <Modal visible={!!hideTarget} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, isDark && styles.modalContentDark]}>
+                        <Text style={[styles.modalTitle, isDark && styles.modalTitleDark]}>Hide Announcement</Text>
+                        <Text style={[styles.modalText, isDark && styles.modalTextDark]}>
+                            Are you sure you want to dismiss "{hideTarget?.title}"?
+                        </Text>
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity onPress={() => setHideTarget(null)} style={[styles.modalBtnCancel, isDark && styles.modalBtnCancelDark]}>
+                                <Text style={[styles.modalBtnTextCancel, isDark && styles.modalBtnTextCancelDark]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={confirmHide} style={styles.modalBtnHide}>
+                                <Text style={styles.modalBtnTextHide}>Hide</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -159,8 +198,23 @@ const styles = StyleSheet.create({
     cardBody: { fontSize: 15, fontFamily: 'Outfit_400Regular', color: '#3a3a3c', lineHeight: 23, marginBottom: 14 },
     cardBodyDark: { color: '#aeaeb2' },
 
-    cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e5e5ea' },
+    cardFooter: { flexDirection: 'row', alignItems: 'center', paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e5e5ea' },
     cardFooterDark: { borderTopColor: '#2c2c2e' },
     footerText: { fontSize: 12, fontFamily: 'Outfit_400Regular', color: '#8e8e93' },
     footerDot: { fontSize: 12, color: '#c7c7cc' },
+
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+    modalContent: { backgroundColor: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 340, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 8 },
+    modalContentDark: { backgroundColor: '#1c1c1e' },
+    modalTitle: { fontSize: 18, fontFamily: 'Outfit_700Bold', color: '#000', marginBottom: 10, textAlign: 'center' },
+    modalTitleDark: { color: '#fff' },
+    modalText: { fontSize: 15, fontFamily: 'Outfit_400Regular', color: '#3a3a3c', marginBottom: 24, textAlign: 'center', lineHeight: 22 },
+    modalTextDark: { color: '#aeaeb2' },
+    modalActions: { flexDirection: 'row', gap: 12 },
+    modalBtnCancel: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#f2f2f7', alignItems: 'center' },
+    modalBtnCancelDark: { backgroundColor: '#2c2c2e' },
+    modalBtnTextCancel: { fontSize: 15, fontFamily: 'Outfit_600SemiBold', color: '#000' },
+    modalBtnTextCancelDark: { color: '#fff' },
+    modalBtnHide: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#FF3B30', alignItems: 'center' },
+    modalBtnTextHide: { fontSize: 15, fontFamily: 'Outfit_600SemiBold', color: '#fff' },
 });

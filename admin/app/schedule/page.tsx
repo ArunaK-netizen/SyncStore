@@ -86,9 +86,12 @@ const defaultForm: ShiftFormState = {
     note: '',
 };
 
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function SchedulePage() {
     const { user } = useAuth();
-    const { transactions, loading: txLoading } = useTransactions();
+    const { activeParttime } = useParttime();
+    const { transactions, loading: txLoading } = useTransactions(activeParttime?.id);
     const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
     const [schedLoading, setSchedLoading] = useState(true);
     const [weekOffset, setWeekOffset] = useState(0);
@@ -103,15 +106,22 @@ export default function SchedulePage() {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsub = subscribeSchedules((data) => {
+        if (!activeParttime) {
+            setSchedules([]);
+            setAdminUsersList([]);
+            setSchedLoading(false);
+            return;
+        }
+        setSchedLoading(true);
+        const unsub = subscribeSchedules(activeParttime.id, (data) => {
             setSchedules(data);
             setSchedLoading(false);
         });
-        const unsub2 = subscribeAdminUsers((data) => {
+        const unsub2 = subscribeAdminUsers(activeParttime.id, (data) => {
             setAdminUsersList(data.map(u => ({ uid: u.uid, name: u.name || u.email })));
         });
         return () => { unsub(); unsub2(); };
-    }, []);
+    }, [activeParttime]);
 
     // Merge admin_users whitelist + transaction-derived employees
     // (so employees without sales still appear for scheduling)
@@ -161,7 +171,7 @@ export default function SchedulePage() {
     };
 
     const handleSave = async () => {
-        if (!form.startTime || !form.endTime || !form.employeeUid) return;
+        if (!form.startTime || !form.endTime || !form.employeeUid || !activeParttime) return;
         setSaving(true);
         try {
             const payload = {
@@ -175,9 +185,9 @@ export default function SchedulePage() {
                 createdBy: user?.displayName || user?.email || 'Admin',
             };
             if (modal === 'edit' && editId) {
-                await updateScheduleEntry(editId, payload);
+                await updateScheduleEntry(activeParttime.id, editId, payload);
             } else {
-                await addScheduleEntry(payload);
+                await addScheduleEntry(activeParttime.id, payload);
             }
             closeModal();
         } finally {
@@ -186,8 +196,9 @@ export default function SchedulePage() {
     };
 
     const handleDelete = async (id: string) => {
+        if (!activeParttime) return;
         if (confirmDelete !== id) { setConfirmDelete(id); return; }
-        await deleteScheduleEntry(id);
+        await deleteScheduleEntry(activeParttime.id, id);
         setConfirmDelete(null);
     };
 

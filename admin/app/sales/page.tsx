@@ -130,8 +130,11 @@ function EmployeeDropdown({ employees, value, onChange }: {
     );
 }
 
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function SalesPage() {
-    const { transactions, loading } = useTransactions();
+    const { activeParttime } = useParttime();
+    const { transactions, loading } = useTransactions(activeParttime?.id);
     const [expanded, setExpanded] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [filterPayment, setFilterPayment] = useState('all');
@@ -178,21 +181,37 @@ export default function SalesPage() {
     const hasFilters = search || filterPayment !== 'all' || filterEmployee !== 'all' || filterDateFrom || filterDateTo;
 
     const handleDelete = async (id: string) => {
+        if (!activeParttime) return;
         if (confirmDelete !== id) { setConfirmDelete(id); return; }
         setDeleting(id);
-        try { await deleteTransaction(id); }
+        try { await deleteTransaction(activeParttime.id, id); }
         finally { setDeleting(null); setConfirmDelete(null); }
     };
 
     const exportExcel = () => {
-        const rows = filtered.map(t => ({
-            Date: t.date,
-            Employee: t.userName || 'Unknown',
-            Items: (t.items?.map(i => `${i.productName} ×${i.quantity}`).join(', ')) || t.productName || '',
-            Payment: t.paymentMethod?.toUpperCase() || '',
-            Tip: t.tip || 0,
-            Total: t.totalAmount || 0,
-        }));
+        const rows = filtered.flatMap(t => {
+            const timeStr = new Date(t.timestamp || 0).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (!t.items || t.items.length === 0) {
+                return [{
+                    Date: t.date,
+                    Time: timeStr,
+                    Employee: t.userName || 'Unknown',
+                    Product: t.productName || 'Custom',
+                    Qty: t.quantity || 1,
+                    Payment: t.paymentMethod?.toUpperCase() || '',
+                    Amount: (t.price || 0) * (t.quantity || 1),
+                }];
+            }
+            return t.items.map(it => ({
+                Date: t.date,
+                Time: timeStr,
+                Employee: t.userName || 'Unknown',
+                Product: it.productName,
+                Qty: it.quantity,
+                Payment: t.paymentMethod?.toUpperCase() || '',
+                Amount: it.price * it.quantity,
+            }));
+        });
         const ws = XLSX.utils.json_to_sheet(rows);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Sales');
@@ -219,23 +238,38 @@ export default function SalesPage() {
         doc.setTextColor(120, 120, 120);
         doc.text(`Period: ${label}`, 14, 26);
         doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 32);
-        doc.text(`Total: ${formatCurrency(totalFiltered)}  |  Transactions: ${filtered.length}`, 14, 38);
+        doc.text(`Total Sales: ${formatCurrency(totalFiltered)}  |  Orders: ${filtered.length}`, 14, 38);
         doc.setTextColor(0, 0, 0);
-        autoTable(doc, {
-            startY: 44,
-            head: [['Date', 'Employee', 'Items', 'Payment', 'Tip', 'Total']],
-            body: filtered.map(t => [
+
+        const tableBody = filtered.flatMap(t => {
+            if (!t.items || t.items.length === 0) {
+                return [[
+                    t.date,
+                    t.userName || 'Unknown',
+                    t.productName || 'Custom',
+                    t.quantity || 1,
+                    t.paymentMethod?.toUpperCase() || '',
+                    formatCurrency((t.price || 0) * (t.quantity || 1)),
+                ]];
+            }
+            return t.items.map((it: any) => [
                 t.date,
                 t.userName || 'Unknown',
-                (t.items?.map((i: any) => `${i.productName} ×${i.quantity}`).join(', ')) || t.productName || '',
+                it.productName,
+                it.quantity,
                 t.paymentMethod?.toUpperCase() || '',
-                t.tip > 0 ? formatCurrency(t.tip) : '—',
-                formatCurrency(t.totalAmount),
-            ]),
+                formatCurrency(it.price * it.quantity),
+            ]);
+        });
+
+        autoTable(doc, {
+            startY: 44,
+            head: [['Date', 'Employee', 'Product', 'Qty', 'Payment', 'Amount']],
+            body: tableBody,
             styles: { fontSize: 8, cellPadding: 3 },
             headStyles: { fillColor: [10, 132, 255], textColor: 255, fontStyle: 'bold' },
             alternateRowStyles: { fillColor: [245, 245, 245] },
-            foot: [['', '', '', '', 'Total', formatCurrency(totalFiltered)]],
+            foot: [['', '', '', '', 'Total Sales', formatCurrency(totalFiltered)]],
             footStyles: { fontStyle: 'bold', fillColor: [230, 230, 230] },
         });
         const fname = `sales_${label.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;

@@ -1,6 +1,7 @@
 import { collection, onSnapshot, orderBy, query } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { getDb } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 
 export type LeaderboardEntry = {
     uid: string;
@@ -10,15 +11,22 @@ export type LeaderboardEntry = {
 };
 
 export const useLeaderboard = () => {
+    const { parttimeId } = useAuth();
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!parttimeId) {
+            setLeaderboard([]);
+            setLoading(false);
+            return;
+        }
+
         const db = getDb();
         const currentMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
 
         const q = query(
-            collection(db, 'transactions'),
+            collection(db, 'parttimes', parttimeId, 'transactions'),
             orderBy('timestamp', 'desc'),
         );
 
@@ -51,7 +59,7 @@ export const useLeaderboard = () => {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [parttimeId]);
 
     return { leaderboard, loading };
 };

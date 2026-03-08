@@ -25,8 +25,11 @@ function Delta({ current, previous, label }: { current: number; previous: number
   );
 }
 
+import { useParttime } from '@/lib/ParttimeContext';
+
 export default function HomePage() {
-  const { transactions, loading } = useTransactions();
+  const { activeParttime } = useParttime();
+  const { transactions, loading } = useTransactions(activeParttime?.id);
   const analytics = useAnalytics(transactions);
 
   // ALL hooks must be declared before any conditional return

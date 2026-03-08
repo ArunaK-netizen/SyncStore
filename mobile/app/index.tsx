@@ -19,6 +19,10 @@ export default function Index() {
   if (!user) return <Redirect href="/login" />;
 
   // User is signed in but not yet approved
+  if (accessStatus === 'needsCode') {
+    return <Redirect href={'/join' as any} />;
+  }
+
   if (accessStatus === 'pending' || accessStatus === 'rejected' || accessStatus === 'checking') {
     return <Redirect href={'/pending' as any} />;
   }
