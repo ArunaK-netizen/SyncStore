@@ -10,7 +10,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "PartTime Admin — Dashboard",
+  title: "SyncStore Admin — Dashboard",
   description: "Admin dashboard for managing your part-time business",
 };
 
