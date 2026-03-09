@@ -7,39 +7,8 @@ on:
   workflow_dispatch: # Manual trigger for full APK build
 
 jobs:
-  update:
-    name: OTA Update
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./mobile
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: 'npm'
-          cache-dependency-path: mobile/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
-
-      - name: Publish OTA Update
-        run: |
-          eas update --channel production --message "Commit: ${{ github.sha }}"
-        env:
-          EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
-
   build:
     name: Build Production APK
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     defaults:
       run:
