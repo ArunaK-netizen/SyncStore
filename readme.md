@@ -1,84 +1,110 @@
-# SyncStore
+<div align="center">
+  <img src="assets/home.png" alt="SyncStore Logo" width="120" />
+  <h1>SyncStore</h1>
+  <p><strong>A Unified Point-of-Sale & Employee Management Platform</strong></p>
+  
+  <p>
+    <a href="#features">Features</a> •
+    <a href="#architecture">Architecture</a> •
+    <a href="#screenshots">Screenshots</a> •
+    <a href="#getting-started">Getting Started</a>
+  </p>
+</div>
 
-A point-of-sale and employee management application, providing a mobile app for staff and a web dashboard for administrators. The system handles scheduling, point-of-sale operations, inventory management, and performance tracking.
+---
 
-## Architecture
+## 📖 Overview
 
-The project is split into two primary applications:
+SyncStore is a dual-platform system designed to streamline retail and part-time business operations. It provides a robust **React Native mobile application** for point-of-sale and employee access, paired with a comprehensive **Next.js web dashboard** for high-level administrative control, inventory management, and analytics.
 
-### Mobile Application (`/mobile`)
-Built with React Native, Expo Router, and TypeScript. Acts as a POS terminal and digital companion for employees.
-- **Cart & POS:** Item browsing, quantity adjustments, and dynamic tax calculation (e.g., category-specific rates).
-- **Schedule Management:** Direct access to upcoming shifts and schedules.
-- **Gamification:** Leaderboard to track sales metrics and encourage employee performance.
-- **Communication:** Built-in announcements system with unread status synchronization.
-- **Access Control:** Request-based sign-up system, requiring admin approval to access the mobile features. Supports a system-wide dark mode.
+## ✨ Features
 
-### Admin Dashboard (`/admin`)
-Built with Next.js, TypeScript, and Tailwind CSS. Provides a high-level view and complete control over business operations.
-- **Business Operations:** Manage product listings, categories, and inventory.
-- **Employee Management:** Accept or reject user access requests, curate the application whitelist, and manage staff roles.
-- **Analytics:** Data visualization for sales tracking, revenue trends, and key performance indicators.
-- **System Announcements:** Broadcast messages directly to employees.
+### 📱 Staff Mobile Experience (`/mobile`)
+Designed as a POS terminal and a daily companion for employees.
+- **Fast POS & Cart:** Browse inventory, adjust quantities, and process transactions with dynamic, category-specific tax calculations.
+- **Schedule Sync:** Employees have direct visibility into their upcoming shifts.
+- **Performance Gamification:** An integrated leaderboard tracks sales metrics to encourage friendly competition and performance.
+- **Company Announcements:** A built-in broadcast system ensures staff see important updates, with synchronized unread badges.
+- **Secure Access Control:** A request-based sign-up system ensures only verified staff gain access to the platform. 
 
-Both applications use Firebase for secure authentication and database persistence.
+### 💻 Admin Dashboard (`/admin`)
+The control center for managers and owners to oversee operations.
+- **Business Operations:** Complete CRUD functionality for product listings, categories, and stock management.
+- **Workforce Management:** Review and approve access requests, manage system roles, and curate the employee whitelist.
+- **Sales Analytics:** Visual data tracking for revenue trends, top-selling items, and essential KPIs.
+- **Broadcast Hub:** Post system-wide announcements directly to staff mobile devices.
 
-## Application Interfaces
+## 🏗️ Architecture Stack
 
-### Mobile Experience
+Both applications are seamlessly connected via **Firebase**, utilizing Firebase Authentication for secure identity management and Cloud Firestore for real-time database persistence. 
+
+| Platform | Technology Stack | Purpose |
+| :--- | :--- | :--- |
+| **Mobile App** | React Native, Expo Router, TypeScript | Staff interface, POS, schedules |
+| **Web Admin** | Next.js, Node.js, Tailwind CSS | Management, CMS, Data Analytics |
+| **Backend** | Firebase Auth, Firestore | Database, Auth, Cloud functions |
+
+## 📸 Screenshots
+
+### Mobile Terminals
 <p align="center">
   <img src="assets/home.png" width="30%" alt="Home Screen" />
-  <img src="assets/checkout.png" width="30%" alt="Checkout" />
-  <img src="assets/schedule.png" width="30%" alt="Schedule" />
+  <img src="assets/checkout.png" width="30%" alt="Checkout POS" />
+  <img src="assets/schedule.png" width="30%" alt="Schedule View" />
 </p>
 <p align="center">
   <img src="assets/Leaderboard.png" width="30%" alt="Leaderboard" />
-  <img src="assets/reports.png" width="30%" alt="Reports" />
-  <img src="assets/profile.png" width="30%" alt="Profile" />
+  <img src="assets/reports.png" width="30%" alt="Reports Generation" />
+  <img src="assets/profile.png" width="30%" alt="User Profile" />
 </p>
 
-### Admin Dashboard
+### Admin Control Center
 <p align="center">
-  <img src="assets/admin_overview.png" width="80%" alt="Admin Overview" />
+  <img src="assets/admin_overview.png" width="85%" alt="Admin Dashboard Overview" />
 </p>
 <p align="center">
-  <img src="assets/admin_products.png" width="45%" alt="Product Inventory" />
-  <img src="assets/admin_analytics.png" width="45%" alt="Analytics" />
+  <img src="assets/admin_products.png" width="42%" alt="Product Inventory Management" />
+  <img src="assets/admin_analytics.png" width="42%" alt="Sales Analytics" />
 </p>
 
-## Setup and Installation
+## 🚀 Getting Started
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   ```
+Follow these instructions to get both environments running locally.
 
-2. **Run the Mobile App:**
-   ```bash
-   cd mobile
-   npm install
-   npx expo start
-   ```
+### 1. Clone the repository
+```bash
+git clone https://github.com/ArunaK-netizen/SyncStore.git
+cd SyncStore
+```
 
-3. **Run the Admin Dashboard:**
+### 2. Environment Configuration
+Because this project utilizes Firebase, you must manual provide configuration credentials that are kept out of version control for security.
+
+**Mobile App (`/mobile`)**
+1. Generate a `google-services.json` file for Android from your Firebase Console.
+2. Place this file directly in the root of the `/mobile` directory.
+
+**Admin Dashboard (`/admin`)**
+1. Copy the template environment variables:
    ```bash
    cd admin
-   npm install
-   npm run dev
+   cp .env.example .env.local
    ```
+2. Open `.env.local` and populate it with your Firebase Web configuration details.
+3. *(Optional)* If you are utilizing server-side Firebase Admin features, ensure your `serviceAccountKey.json` from the Firebase console is placed in the root of the `/admin` directory.
 
-## Environment Setup
+### 3. Running the Applications
 
-Because this project uses Firebase, you must create configuration files that are purposefully kept out of version control.
+**Run the Mobile POS App**
+```bash
+cd mobile
+npm install
+npx expo start
+```
 
-1. **For the Mobile App (`/mobile`)**:
-   - Download your specific `google-services.json` (for Android) from your Firebase console.
-   - Place `google-services.json` inside the root of the `/mobile` directory.
-
-2. **For the Admin Dashboard (`/admin`)**:
-   - Copy the provided example environment template: 
-     ```bash
-     cp .env.example .env.local
-     ```
-   - Open `.env.local` and populate it with your Firebase Web configuration details.
-   - If utilizing server-side Firebase Admin SDK code, you may also need to insert your `serviceAccountKey.json` from the Firebase console into the root of the `/admin` directory.
+**Run the Web Dashboard**
+```bash
+cd admin
+npm install
+npm run dev
+```
