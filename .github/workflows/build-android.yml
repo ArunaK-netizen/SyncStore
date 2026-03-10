@@ -33,15 +33,12 @@ jobs:
         run: npm install -g eas-cli
 
       - name: Build with EAS
-        run: eas build --platform android --profile production --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
-
-      - name: Download APK artifact
         run: |
           mkdir -p ./artifacts
-          echo "Downloading latest production build artifact..."
-          eas build:download --platform android --profile production --non-interactive --output ./artifacts/app.apk
+          eas build --platform android --profile production --non-interactive --wait --json > build_result.json
+          ARTIFACT_URL=$(cat build_result.json | jq -r '.[0].artifacts.buildUrl')
+          echo "Downloading artifact from $ARTIFACT_URL..."
+          curl -fSL "$ARTIFACT_URL" -o ./artifacts/app.apk
         env:
           EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
 
