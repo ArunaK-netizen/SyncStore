@@ -1,4 +1,4 @@
-{
+module.exports = {
   "expo": {
     "name": "PartTime",
     "slug": "parttime",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.blackdevil007.parttime",
-      "googleServicesFile": "./GoogleService-Info.plist",
+      "googleServicesFile": process.env.GOOGLE_SERVICES_JSON || "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -26,7 +26,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.blackdevil007.parttime",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": process.env.GOOGLE_SERVICES_JSON || "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -70,4 +70,4 @@
       "policy": "appVersion"
     }
   }
-}
+};
