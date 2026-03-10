@@ -37,41 +37,11 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
 
-      - name: Download APK artifact (with retries)
+      - name: Download APK artifact
         run: |
-          set -euo pipefail
-          MAX_ATTEMPTS=40
-          SLEEP_SEC=15
-          echo "Polling for finished Android build (max $MAX_ATTEMPTS attempts, sleep $SLEEP_SEC s)..."
-
-          ARTIFACT_URL=""
-          attempt=0
-          while [ $attempt -lt $MAX_ATTEMPTS ]; do
-            attempt=$((attempt+1))
-            echo "Attempt #$attempt: listing finished Android builds..."
-            BUILD_JSON=$(eas build:list --platform android --status finished --limit 5 --json || true)
-            echo "$BUILD_JSON" > ./builds.json
-
-            ARTIFACT_URL=$(echo "$BUILD_JSON" | jq -r 'map(.artifacts[]?.url) | flatten | .[]' 2>/dev/null | head -n1 || true)
-            if [ -n "$ARTIFACT_URL" ] && [ "$ARTIFACT_URL" != "null" ]; then
-              echo "Found artifact URL: $ARTIFACT_URL"
-              break
-            fi
-
-            echo "No finished artifact found yet. Waiting $SLEEP_SEC seconds before retrying..."
-            sleep $SLEEP_SEC
-          done
-
-          if [ -z "$ARTIFACT_URL" ] || [ "$ARTIFACT_URL" = "null" ]; then
-            echo "Failed to find a finished build artifact. Dumping recent builds:"
-            eas build:list --platform android --limit 10 --json || true
-            exit 1
-          fi
-
           mkdir -p ./artifacts
-          echo "Downloading artifact to ./artifacts/app.apk..."
-          curl -fSL "$ARTIFACT_URL" -o ./artifacts/app.apk
-          echo "Downloaded artifact:"; ls -lh ./artifacts/app.apk || true
+          echo "Downloading latest production build artifact..."
+          eas build:download --platform android --profile production --non-interactive --output ./artifacts/app.apk
         env:
           EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
 
