@@ -9,12 +9,21 @@ import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { Calendar } from 'react-native-calendars';
 import { BarChart } from 'react-native-gifted-charts';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AdminAnalyticsView from '../(admin)/analytics';
+import { useAdminMode } from '../../context/AdminModeContext';
 import { useSales } from '../../context/SalesContext';
 import { useTheme } from '../../hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 
 export default function ReportsScreen() {
+    const { isAdminMode } = useAdminMode();
+    if (isAdminMode) return <AdminAnalyticsView />;
+
+    return <EmployeeReportsScreen />;
+}
+
+function EmployeeReportsScreen() {
     const { transactions } = useSales();
     const { colorScheme } = useTheme();
     const router = useRouter();

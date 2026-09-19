@@ -4,7 +4,7 @@ import { Badge, EmptyState, formatCurrency, LoadingSpinner, PageHeader } from '@
 import { addProduct, deleteProduct, Product, updateProduct } from '@/lib/db';
 import { useProducts } from '@/lib/hooks';
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 
 import { useParttime } from '@/lib/ParttimeContext';
 
@@ -12,6 +12,39 @@ export default function ProductsPage() {
     const { activeParttime } = useParttime();
     const { products, loading } = useProducts(activeParttime?.id);
     const [showAdd, setShowAdd] = useState(false);
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!showAdd) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setShowAdd(false);
+            }
+            if (e.key === 'Tab' && modalRef.current) {
+                const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                if (focusableElements.length === 0) return;
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+
+                if (e.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showAdd]);
+
     const [editing, setEditing] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const [form, setForm] = useState({ name: '', price: '', category: '' });
@@ -48,27 +81,48 @@ export default function ProductsPage() {
     };
 
     const handleAdd = async () => {
-        if (!form.name || !form.price || !form.category || !activeParttime) return;
+        const parsedPrice = parseFloat(form.price);
+        if (!form.name.trim() || form.price.trim() === '' || !Number.isFinite(parsedPrice) || !form.category.trim() || !activeParttime) return;
+        
         setSaving(true);
         try {
-            await addProduct(activeParttime.id, { name: form.name.trim(), price: parseFloat(form.price), category: form.category.trim().toLowerCase() });
+            await addProduct(activeParttime.id, { 
+                name: form.name.trim(), 
+                price: parsedPrice, 
+                category: form.category.trim().toLowerCase() 
+            });
             setForm({ name: '', price: '', category: '' });
             setShowAdd(false);
         } finally { setSaving(false); }
     };
 
     const handleEdit = async (id: string) => {
-        if (!editForm.name || !editForm.price || !editForm.category || !activeParttime) return;
+        const parsedPrice = parseFloat(editForm.price as any);
+        if (!editForm.name || !Number.isFinite(parsedPrice) || !editForm.category || !activeParttime) return;
+        
         setSaving(true);
-        try { await updateProduct(activeParttime.id, id, editForm); setEditing(null); }
-        finally { setSaving(false); }
+        try { 
+            await updateProduct(activeParttime.id, id, { 
+                ...editForm, 
+                price: parsedPrice,
+                category: editForm.category.trim().toLowerCase()
+            } as Partial<Product>); 
+            setEditing(null); 
+        } finally { 
+            setSaving(false); 
+        }
     };
 
     const handleDelete = async (id: string) => {
         if (!activeParttime) return;
         if (confirmDelete !== id) { setConfirmDelete(id); return; }
-        await deleteProduct(activeParttime.id, id);
-        setConfirmDelete(null);
+        try {
+            await deleteProduct(activeParttime.id, id);
+            setConfirmDelete(null);
+        } catch (error) {
+            console.error("Failed to delete product:", error);
+            alert("Error deleting product. Please try again.");
+        }
     };
 
     if (loading) return <AppShell><div className="p-6"><LoadingSpinner /></div></AppShell>;
@@ -89,17 +143,28 @@ export default function ProductsPage() {
 
                 {/* Add Product Modal */}
                 {showAdd && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                        <div className="glass-card w-full max-w-sm p-6 fade-in">
+                    <div 
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setShowAdd(false)}
+                    >
+                        <div 
+                            ref={modalRef}
+                            className="glass-card w-full max-w-sm p-6 fade-in"
+                            onClick={e => e.stopPropagation()}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="add-product-title"
+                        >
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-white font-bold">Add New Product</h2>
+                                <h2 id="add-product-title" className="text-white font-bold">Add New Product</h2>
                                 <button onClick={() => setShowAdd(false)} className="text-textTertiary hover:text-white transition-colors"><X size={18} /></button>
                             </div>
                             <div className="space-y-3">
-                                {(['name', 'price', 'category'] as const).map(field => (
+                                {(['name', 'price', 'category'] as const).map((field, i) => (
                                     <div key={field}>
                                         <label className="block text-textSecondary text-xs font-semibold mb-1 capitalize">{field}</label>
                                         <input
+                                            autoFocus={i === 0}
                                             value={form[field]}
                                             onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
                                             type={field === 'price' ? 'number' : 'text'}
@@ -181,7 +246,7 @@ export default function ProductsPage() {
                                             </td>
                                             <td className="px-5 py-3 text-right">
                                                 {isEditing ? (
-                                                    <input type="number" value={editForm.price ?? ''} onChange={e => setEditForm(f => ({ ...f, price: parseFloat(e.target.value) }))}
+                                                    <input type="number" value={editForm.price ?? ''} onChange={e => setEditForm(f => ({ ...f, price: e.target.value === '' ? '' : e.target.value } as any))}
                                                         className="bg-surface2 border border-border rounded-lg px-2 py-1 text-sm w-20 focus:outline-none focus:border-blue/50 text-white text-right" />
                                                 ) : (
                                                     <span className="text-white font-semibold text-sm tabular-nums">{formatCurrency(p.price)}</span>

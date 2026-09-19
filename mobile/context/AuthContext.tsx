@@ -1,7 +1,7 @@
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import {
-  collection, doc, getDoc, onSnapshot, query,
-  setDoc, where
+    collection, doc, getDoc, getDocs, onSnapshot, query,
+    setDoc, where
 } from '@react-native-firebase/firestore';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [accessStatus, setAccessStatus] = useState<AccessStatus>('checking');
   const [parttimeId, setParttimeId] = useState<string | null>(null);
   const db = getDb();
-  let unsubRequestRef = React.useRef<(() => void) | undefined>();
+  const unsubRequestRef = React.useRef<(() => void) | undefined>(undefined);
 
   useEffect(() => {
     async function init() {
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       collection(db, 'parttimes', pId, 'approved_users'),
       where('uid', '==', user.uid),
     );
-    const approvedSnap = await approvedQ.get().catch(() => null);
+    const approvedSnap = await getDocs(approvedQ).catch(() => null);
     if (approvedSnap && !approvedSnap.empty) {
       setAccessStatus('approved');
       setLoading(false);

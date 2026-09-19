@@ -1,13 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { Platform, StyleSheet, View, Text } from 'react-native';
+import { useAdminMode } from '../../context/AdminModeContext';
 import { useTheme } from '../../hooks/useTheme';
 import { useAnnouncements } from '../../hooks/useAnnouncements';
+import { useAdminAccess } from '../../hooks/useAdminAccess';
 
 export default function TabLayout() {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const { unreadCount } = useAnnouncements();
+  const { isAdminMode } = useAdminMode();
+  const { isAdmin } = useAdminAccess();
+
+  const showAdminTabs = isAdmin && isAdminMode;
 
   return (
     <Tabs
@@ -41,59 +47,75 @@ export default function TabLayout() {
         },
       }}
     >
+      {/* Tab 1: Home (POS) / Dashboard (Admin) */}
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Home',
+          title: showAdminTabs ? 'Dashboard' : 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[
-              styles.iconContainer,
-              focused && styles.iconContainerFocused
-            ]}>
+            <View style={styles.iconContainer}>
               <Ionicons name={focused ? "home" : "home-outline"} size={24} color={color} />
             </View>
           ),
         }}
       />
+
+      {/* Tab 2: History (Employee) / Staff (Admin) */}
       <Tabs.Screen
         name="calendar"
         options={{
-          title: 'History',
+          title: showAdminTabs ? 'Staff' : 'History',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[
-              styles.iconContainer,
-              focused && styles.iconContainerFocused
-            ]}>
-              <Ionicons name={focused ? "calendar" : "calendar-outline"} size={24} color={color} />
+            <View style={styles.iconContainer}>
+              <Ionicons
+                name={showAdminTabs
+                  ? (focused ? "people" : "people-outline")
+                  : (focused ? "calendar" : "calendar-outline")
+                }
+                size={24}
+                color={color}
+              />
             </View>
           ),
         }}
       />
+
+      {/* Tab 3: Products (Admin only, hidden for employee) */}
+      <Tabs.Screen
+        name="admin-products"
+        options={{
+          title: 'Products',
+          href: showAdminTabs ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <View style={styles.iconContainer}>
+              <Ionicons name={focused ? "cube" : "cube-outline"} size={24} color={color} />
+            </View>
+          ),
+        }}
+      />
+
+      {/* Tab 4: Reports */}
       <Tabs.Screen
         name="reports"
         options={{
           title: 'Reports',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[
-              styles.iconContainer,
-              focused && styles.iconContainerFocused
-            ]}>
+            <View style={styles.iconContainer}>
               <Ionicons name={focused ? "bar-chart" : "bar-chart-outline"} size={24} color={color} />
             </View>
           ),
         }}
       />
+
+      {/* Tab 5: Profile */}
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
-            <View style={[
-              styles.iconContainer,
-              focused && styles.iconContainerFocused
-            ]}>
+            <View style={styles.iconContainer}>
               <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
-              {unreadCount > 0 && (
+              {unreadCount > 0 && !showAdminTabs && (
                 <View style={{
                   position: 'absolute',
                   top: -2,
@@ -117,37 +139,19 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          href: null,
-        }}
-      />
+
+      {/* Hidden screens */}
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="explore" options={{ href: null }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  blurView: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 52,
     height: 32,
-  },
-  iconContainerFocused: {
-    // Add subtle scale or background if desired
   },
 });

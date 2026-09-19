@@ -3,9 +3,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { CustomSplashScreen } from '../components/CustomSplashScreen';
 import { UpdateModal } from '../components/UpdateModal';
+import { AdminProvider } from '../context/AdminContext';
+import { AdminModeProvider } from '../context/AdminModeContext';
 import { AuthProvider } from '../context/AuthContext';
 import { ProductProvider } from '../context/ProductContext';
 import { SalesProvider } from '../context/SalesContext';
@@ -35,6 +37,12 @@ function RootLayoutContent() {
         <Stack.Screen name="leaderboard-page" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="announcements-page" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="pending" options={{ animation: 'fade', gestureEnabled: false }} />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="admin-sales" options={{ animation: 'slide_from_right', headerShown: false }} />
+        <Stack.Screen name="admin-schedule" options={{ animation: 'slide_from_right', headerShown: false }} />
+        <Stack.Screen name="admin-announcements" options={{ animation: 'slide_from_right', headerShown: false }} />
+        <Stack.Screen name="admin-users" options={{ animation: 'slide_from_right', headerShown: false }} />
+        <Stack.Screen name="admin-employee-detail" options={{ animation: 'slide_from_right', headerShown: false }} />
       </Stack>
 
       <UpdateModal
@@ -50,9 +58,11 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Outfit_400Regular,
-    Outfit_600SemiBold,
-    Outfit_700Bold,
+    ...(Platform.OS === 'web' ? {} : {
+      Outfit_400Regular,
+      Outfit_600SemiBold,
+      Outfit_700Bold,
+    }),
   });
   const [isSplashAnimationFinished, setIsSplashAnimationFinished] = useState(false);
 
@@ -68,13 +78,17 @@ export default function RootLayout() {
         <ThemeProvider>
           <ProductProvider>
             <SalesProvider>
-              <RootLayoutContent />
-              {!isSplashAnimationFinished && (
-                <CustomSplashScreen
-                  isReady={fontsLoaded || !!fontError}
-                  onFinish={() => setIsSplashAnimationFinished(true)}
-                />
-              )}
+              <AdminProvider>
+                <AdminModeProvider>
+                <RootLayoutContent />
+                {!isSplashAnimationFinished && (
+                  <CustomSplashScreen
+                    isReady={fontsLoaded || !!fontError}
+                    onFinish={() => setIsSplashAnimationFinished(true)}
+                  />
+                )}
+                </AdminModeProvider>
+              </AdminProvider>
             </SalesProvider>
           </ProductProvider>
         </ThemeProvider>

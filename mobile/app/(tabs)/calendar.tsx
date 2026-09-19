@@ -7,10 +7,19 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { Calendar } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import EditTransactionModal from '../../components/EditTransactionModal';
+import AdminStaffView from '../../components/admin/AdminStaffView';
+import { useAdminMode } from '../../context/AdminModeContext';
 import { useSales } from '../../context/SalesContext';
 import { useTheme } from '../../hooks/useTheme';
 
 export default function CalendarScreen() {
+    const { isAdminMode } = useAdminMode();
+    if (isAdminMode) return <AdminStaffView />;
+
+    return <EmployeeCalendarScreen />;
+}
+
+function EmployeeCalendarScreen() {
     const { transactions } = useSales();
     const { colorScheme } = useTheme();
     const router = useRouter();

@@ -190,7 +190,10 @@ export default function SalesPage() {
 
     const exportExcel = () => {
         const rows = filtered.flatMap(t => {
-            const timeStr = new Date(t.timestamp || 0).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const isValidTs = t.timestamp != null && Number.isFinite(Number(t.timestamp)) && Number(t.timestamp) > 0;
+            const timeStr = isValidTs 
+                ? new Date(Number(t.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : 'N/A';
             if (!t.items || t.items.length === 0) {
                 return [{
                     Date: t.date,

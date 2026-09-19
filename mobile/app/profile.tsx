@@ -6,11 +6,13 @@ import React, { useEffect, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { STORAGE_KEYS, saveData } from '../utils/storage';
 
 export default function Profile() {
     const router = useRouter();
-    const { user, logout, updateDisplayName } = useAuth();
+    const { user, logout, updateDisplayName, parttimeId } = useAuth();
+    const { isAdmin, emailsList } = useAdminAccess();
     const { colorScheme } = useTheme();
     const isDark = colorScheme === 'dark';
 
@@ -98,6 +100,21 @@ export default function Profile() {
                             editable={false}
                             style={[styles.input, isDark && styles.inputDark]}
                         />
+                    </View>
+
+                    {isAdmin && (
+                        <TouchableOpacity style={[styles.adminButton, isDark && styles.adminButtonDark]} onPress={() => router.push('/(admin)' as any)}>
+                            <Ionicons name="shield-checkmark" size={20} color={isDark ? "#0A84FF" : "#007AFF"} />
+                            <Text style={[styles.adminText, isDark && styles.adminTextDark]}>Admin Dashboard</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    <View style={{ padding: 16, backgroundColor: isDark ? '#2c2c2e' : '#f2f2f7', marginTop: 20, borderRadius: 12 }}>
+                        <Text style={{ color: isDark ? '#fff' : '#000', fontFamily: 'Outfit_700Bold', marginBottom: 4 }}>Access Debug</Text>
+                        <Text style={{ color: '#8e8e93', fontSize: 12 }}>Email: {user?.email}</Text>
+                        <Text style={{ color: '#8e8e93', fontSize: 12 }}>Parttime: {parttimeId || 'NULL'}</Text>
+                        <Text style={{ color: '#8e8e93', fontSize: 12 }}>Admins: {emailsList?.join(', ') || 'None found'}</Text>
+                        <Text style={{ color: '#8e8e93', fontSize: 12 }}>Match: {isAdmin.toString()}</Text>
                     </View>
 
                     <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -225,6 +242,27 @@ const styles = StyleSheet.create({
     inputDark: {
         backgroundColor: '#2c2c2e',
         color: '#ffffff',
+    },
+    adminButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        backgroundColor: 'rgba(0, 122, 255, 0.1)',
+        borderRadius: 14,
+        marginTop: 12,
+        gap: 8,
+    },
+    adminButtonDark: {
+        backgroundColor: 'rgba(10, 132, 255, 0.15)',
+    },
+    adminText: {
+        fontSize: 17,
+        fontFamily: 'Outfit_600SemiBold',
+        color: '#007AFF',
+    },
+    adminTextDark: {
+        color: '#0A84FF',
     },
     logoutButton: {
         flexDirection: 'row',

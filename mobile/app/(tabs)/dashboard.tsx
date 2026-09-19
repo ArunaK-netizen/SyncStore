@@ -6,11 +6,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CheckoutModal from '../../components/CheckoutModal';
+import AdminDashboardView from '../../components/admin/AdminDashboardView';
+import { useAdminMode } from '../../context/AdminModeContext';
 import { useProducts } from '../../context/ProductContext';
 import { useSales } from '../../context/SalesContext';
 import { useTheme } from '../../hooks/useTheme';
 
 export default function Dashboard() {
+    const { isAdminMode } = useAdminMode();
+    if (isAdminMode) return <AdminDashboardView />;
+
+    return <EmployeeDashboard />;
+}
+
+function EmployeeDashboard() {
     const { transactions, cart } = useSales();
     const { products, categories } = useProducts();
     const [selectedCategory, setSelectedCategory] = useState<string>('');

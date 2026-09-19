@@ -17,16 +17,20 @@ export function UpdateModal({ visible, onUpdate, onCancel, isDownloading, manife
     const { colorScheme } = useTheme();
     const isDark = colorScheme === 'dark';
 
-    // Try to extract a message or fallback
-    // Note: Expo Updates manifest structure varies (classic vs modern). 
-    // We try to look for standard metadata fields.
+    // Try to extract a message or fallback from EAS Update or Classic Updates
+    const m = manifest?.manifest || {};
+    const expoClient = m.extra?.expoClient || {};
+    
     const updateMessage =
-        manifest?.manifest?.extra?.changelog ||
-        manifest?.manifest?.extra?.expoClient?.description ||
-        manifest?.manifest?.metadata?.message ||
-        "Fix: Importing data causing product catalog to erase";
+        m.message || // Often EAS puts the update message directly on the manifest object
+        expoClient.extra?.updateMessage ||
+        expoClient.extra?.message ||
+        m.extra?.message ||
+        m.extra?.changelog ||
+        m.metadata?.message ||
+        "A new update is available with performance improvements and bug fixes.";
 
-    const version = manifest?.manifest?.version || "2.1";
+    const version = expoClient.version || m.version || "Latest";
 
     return (
         <Modal

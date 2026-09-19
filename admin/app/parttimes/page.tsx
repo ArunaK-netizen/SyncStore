@@ -3,7 +3,7 @@ import AppShell from '@/components/AppShell';
 import { formatShortDate, LoadingSpinner, PageHeader } from '@/components/UI';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/AuthContext';
-import { collection, doc, getDocs, setDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, getDocs, setDoc, query, orderBy, getDoc } from 'firebase/firestore';
 import { Building2, Plus, QrCode } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -36,14 +36,12 @@ export default function ParttimesPage() {
 
         const fetchAll = async () => {
             try {
-                const snap = await getDocs(query(collection(db, 'parttimes')));
+                const snap = await getDocs(query(collection(db, 'parttimes'), orderBy('createdAt', 'desc')));
                 const list: Parttime[] = [];
                 snap.forEach(d => {
                     list.push({ id: d.id, ...d.data() } as Parttime);
                 });
 
-                // Sort by creation date
-                list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
                 setParttimes(list);
             } catch (err) {
                 console.error("Failed to load parttimes:", err);
@@ -57,9 +55,21 @@ export default function ParttimesPage() {
     // Format new ID as user types the name
     const handleNameChange = (val: string) => {
         setNewName(val);
-        // Create an ID like "xyz-parttime"
-        const formattedId = val.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-parttime';
-        setNewId(formattedId);
+        
+        let basePath = val
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-+|-+$/g, '');
+            
+        if (!basePath) {
+            basePath = `parttime-${Math.random().toString(36).substring(2, 6)}`;
+        } else {
+            basePath = `${basePath}-parttime`;
+        }
+        
+        setNewId(basePath);
     };
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -68,8 +78,16 @@ export default function ParttimesPage() {
 
         setCreating(true);
         try {
+            const docRef = doc(db, 'parttimes', newId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                alert("A tenant with this generated ID already exists. Please choose a different name.");
+                setCreating(false);
+                return;
+            }
+
             // Generate a random 4 char code
-            const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const randomSuffix = Math.random().toString(36).substring(2, 6).padEnd(4, '0').toUpperCase();
             const prefix = newName.substring(0, 4).toUpperCase();
             const joinCode = `${prefix}-${randomSuffix}`;
 
