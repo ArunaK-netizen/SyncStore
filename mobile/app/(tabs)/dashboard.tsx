@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -122,6 +123,10 @@ function EmployeeDashboard() {
             .filter(p => p.name.toLowerCase().includes(q));
     }, [searchQuery, products]);
 
+    const hasAnyProducts = useMemo(() => {
+        return Object.values(products).some(arr => arr && arr.length > 0);
+    }, [products]);
+
     return (
         <View style={[styles.container, isDark && styles.containerDark]}>
             {/* Header with Gradient */}
@@ -229,15 +234,39 @@ function EmployeeDashboard() {
                 </View>
 
                 {/* Products Grid */}
-                <FlatList
-                    showsVerticalScrollIndicator={false}
-                    data={searchQuery.trim().length > 0 ? searchResults : (products[selectedCategory] || [])}
-                    numColumns={2}
-                    keyExtractor={item => item.id || item.name}
-                    contentContainerStyle={[styles.productsGrid, { paddingBottom: 120 }]}
-                    columnWrapperStyle={styles.productRow}
-                    renderItem={renderProductItem}
-                />
+                {(() => {
+                    const gridData = searchQuery.trim().length > 0 ? searchResults : (products[selectedCategory] || []);
+                    return (
+                        <FlatList
+                            showsVerticalScrollIndicator={false}
+                            data={gridData}
+                            numColumns={2}
+                            keyExtractor={item => item.id || item.name}
+                            contentContainerStyle={[styles.productsGrid, { paddingBottom: 120 }]}
+                            columnWrapperStyle={gridData.length > 0 ? styles.productRow : undefined}
+                            renderItem={renderProductItem}
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <View style={[styles.emptyIconWrap, isDark && styles.emptyIconWrapDark]}>
+                                        <Ionicons
+                                            name={hasAnyProducts ? "search-outline" : "restaurant-outline"}
+                                            size={44}
+                                            color={isDark ? '#8e8e93' : '#8e8e93'}
+                                        />
+                                    </View>
+                                    <Text style={[styles.emptyTitle, isDark && styles.emptyTitleDark]}>
+                                        {hasAnyProducts ? "No Products Found" : "Menu is Empty"}
+                                    </Text>
+                                    <Text style={[styles.emptySubtitle, isDark && styles.emptySubtitleDark]}>
+                                        {hasAnyProducts
+                                            ? "No items match your search or selected category."
+                                            : "Admin hasn't added any items to the menu yet."}
+                                    </Text>
+                                </View>
+                            }
+                        />
+                    );
+                })()}
 
                 {/* View Order Button */}
                 {cart.length > 0 && (
@@ -583,5 +612,43 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 20,
         fontFamily: 'Outfit_700Bold',
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 48,
+        paddingHorizontal: 24,
+    },
+    emptyIconWrap: {
+        width: 80,
+        height: 80,
+        borderRadius: 24,
+        backgroundColor: '#e5e5ea',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    emptyIconWrapDark: {
+        backgroundColor: '#1c1c1e',
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontFamily: 'Outfit_700Bold',
+        color: '#000000',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    emptyTitleDark: {
+        color: '#ffffff',
+    },
+    emptySubtitle: {
+        fontSize: 14,
+        fontFamily: 'Outfit_400Regular',
+        color: '#8e8e93',
+        textAlign: 'center',
+        lineHeight: 20,
+    },
+    emptySubtitleDark: {
+        color: '#8e8e93',
     },
 });

@@ -76,8 +76,26 @@ export default function AdminProducts() {
                 )}
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
-                        <Ionicons name="cube-outline" size={48} color={isDark ? '#3a3a3c' : '#c7c7cc'} />
-                        <Text style={[styles.emptyText, isDark && styles.textDark]}>No products found</Text>
+                        <View style={[styles.emptyIconBox, isDark && styles.emptyIconBoxDark]}>
+                            <Ionicons name="cube-outline" size={48} color="#0A84FF" />
+                        </View>
+                        <Text style={[styles.emptyTitleText, isDark && styles.textDark]}>
+                            {products.length === 0 ? "Your Menu is Empty" : "No products match"}
+                        </Text>
+                        <Text style={styles.emptySubtitleText}>
+                            {products.length === 0
+                                ? "Add products to your Parttime menu so employees can select them for sales."
+                                : "Try searching for a different term."}
+                        </Text>
+                        {products.length === 0 && (
+                            <TouchableOpacity
+                                style={styles.emptyAddBtn}
+                                onPress={() => router.push('/add-product')}
+                            >
+                                <Ionicons name="add-circle-outline" size={20} color="#ffffff" style={{ marginRight: 6 }} />
+                                <Text style={styles.emptyAddBtnText}>Add First Product</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 }
             />
@@ -181,11 +199,46 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 60,
+        paddingHorizontal: 24,
     },
-    emptyText: {
-        fontSize: 16,
+    emptyIconBox: {
+        width: 80,
+        height: 80,
+        borderRadius: 24,
+        backgroundColor: 'rgba(10, 132, 255, 0.12)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    emptyIconBoxDark: {
+        backgroundColor: 'rgba(10, 132, 255, 0.2)',
+    },
+    emptyTitleText: {
+        fontSize: 20,
+        fontFamily: 'Outfit_700Bold',
+        color: '#000000',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    emptySubtitleText: {
+        fontSize: 14,
         fontFamily: 'Outfit_400Regular',
         color: '#8e8e93',
-        marginTop: 12,
-    }
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+    },
+    emptyAddBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#0A84FF',
+        paddingHorizontal: 20,
+        paddingVertical: 14,
+        borderRadius: 14,
+    },
+    emptyAddBtnText: {
+        color: '#ffffff',
+        fontSize: 16,
+        fontFamily: 'Outfit_600SemiBold',
+    },
 });

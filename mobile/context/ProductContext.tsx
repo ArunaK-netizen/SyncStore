@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, onSnapshot, query } from '@react-native-firebase/firestore';
+import { addDoc, collection, onSnapshot, query } from '@react-native-firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getDb } from '../firebase';
 import { useAuth } from './AuthContext';
@@ -15,6 +15,7 @@ type ProductContextType = {
     products: Record<string, Product[]>;
     categories: string[];
     loading: boolean;
+    addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
 };
 
 
@@ -96,12 +97,16 @@ export const ProductProvider = ({ children }: { children: React.ReactNode }) => 
         return unsubscribe;
     };
 
-
+    const addProduct = async (productData: Omit<Product, 'id'>) => {
+        if (!parttimeId) return;
+        const db = getDb();
+        await addDoc(collection(db, 'parttimes', parttimeId, 'products'), productData);
+    };
 
     const categories = Object.keys(products);
 
     return (
-        <ProductContext.Provider value={{ products, categories, loading }}>
+        <ProductContext.Provider value={{ products, categories, loading, addProduct }}>
             {children}
         </ProductContext.Provider>
     );
