@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'mobile/**'
   workflow_dispatch: # Manual trigger for full APK build
 
 jobs:

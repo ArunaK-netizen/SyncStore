@@ -17,7 +17,6 @@ interface ParttimeContextType {
     activeParttime: ParttimeInfo | null;
     setActiveParttime: (parttime: ParttimeInfo | null) => void;
     availableParttimes: ParttimeInfo[];
-    isSuperAdmin: boolean;
     loadingParttimes: boolean;
 }
 
@@ -27,21 +26,17 @@ export function ParttimeProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const [activeParttime, setActiveParttime] = useState<ParttimeInfo | null>(null);
     const [availableParttimes, setAvailableParttimes] = useState<ParttimeInfo[]>([]);
-    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [loadingParttimes, setLoadingParttimes] = useState(true);
 
     useEffect(() => {
         if (!user || !user.email) {
             setActiveParttime(null);
             setAvailableParttimes([]);
-            setIsSuperAdmin(false);
             setLoadingParttimes(false);
             return;
         }
 
         const userEmail = user.email.toLowerCase().trim();
-        const _isSuperAdmin = userEmail === 'dasari.durga2022@vitstudent.ac.in';
-        setIsSuperAdmin(_isSuperAdmin);
         setLoadingParttimes(true);
 
         const fetchParttimes = async () => {
@@ -64,11 +59,6 @@ export function ParttimeProvider({ children }: { children: ReactNode }) {
                         ownerEmail: pData.ownerEmail,
                         createdByEmail: pData.createdByEmail,
                     };
-
-                    if (_isSuperAdmin) {
-                        authorizedParttimes.push(pInfo);
-                        continue;
-                    }
 
                     // Check if user is owner/creator by email
                     if (
@@ -130,7 +120,6 @@ export function ParttimeProvider({ children }: { children: ReactNode }) {
             activeParttime,
             setActiveParttime,
             availableParttimes,
-            isSuperAdmin,
             loadingParttimes
         }}>
             {children}

@@ -40,7 +40,7 @@ export default function Sidebar() {
 
     const NavContent = () => {
         // We import useParttime inside the component now
-        const { activeParttime, availableParttimes, setActiveParttime, isSuperAdmin } = require('@/lib/ParttimeContext').useParttime();
+        const { activeParttime, availableParttimes, setActiveParttime } = require('@/lib/ParttimeContext').useParttime();
 
         return (
             <div className="flex flex-col h-full">
@@ -59,7 +59,7 @@ export default function Sidebar() {
                     {activeParttime ? (
                         <div className="bg-surface2 rounded-xl border border-border p-3">
                             <p className="text-[10px] uppercase font-bold text-textTertiary tracking-wider mb-1">Active Parttime</p>
-                            {isSuperAdmin ? (
+                            {availableParttimes.length > 1 ? (
                                 <select
                                     className="w-full bg-transparent text-white text-sm font-semibold focus:outline-none cursor-pointer appearance-none truncate"
                                     value={activeParttime.id}
@@ -108,24 +108,6 @@ export default function Sidebar() {
                             </Link>
                         );
                     })}
-
-                    {isSuperAdmin && (
-                        <div className="pt-4 mt-2 border-t border-border">
-                            <p className="px-3 text-[10px] uppercase font-bold text-textTertiary tracking-wider mb-2">Super Admin</p>
-                            <Link
-                                href="/parttimes"
-                                onClick={() => setOpen(false)}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
-                                ${pathname === '/parttimes'
-                                        ? 'bg-purple/15 text-purple'
-                                        : 'text-textSecondary hover:bg-surface2 hover:text-white'
-                                    }`}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={pathname === '/parttimes' ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" className={pathname === '/parttimes' ? 'text-purple' : 'text-textTertiary group-hover:text-white'}><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                                <span className={`text-sm font-medium ${pathname === '/parttimes' ? 'font-semibold' : ''}`}>Manage Tenants</span>
-                            </Link>
-                        </div>
-                    )}
                 </nav>
 
                 {/* User + Logout */}
