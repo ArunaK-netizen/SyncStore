@@ -110,7 +110,7 @@ export default function ProfileTab() {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             await saveData(STORAGE_KEYS.THEME, colorScheme);
             await logout();
-            router.replace('/');
+            router.replace('/login' as any);
         } catch (err) {
             console.error('Logout:', err);
         }

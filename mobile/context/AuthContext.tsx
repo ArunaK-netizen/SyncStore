@@ -168,9 +168,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     try {
-      await authInstance.signOut();
-      await GoogleSignin.signOut();
+      setParttimeId(null);
+      setUser(null);
       setAccessStatus('checking');
+      await authInstance.signOut();
+      await GoogleSignin.signOut().catch(() => {});
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
