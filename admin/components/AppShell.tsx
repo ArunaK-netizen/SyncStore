@@ -2,12 +2,15 @@
 import LoginPage from '@/components/LoginPage';
 import Sidebar from '@/components/Sidebar';
 import { useAuth } from '@/lib/AuthContext';
+import { useParttime } from '@/lib/ParttimeContext';
+import { ShieldAlert } from 'lucide-react';
 import { ReactNode } from 'react';
 
 export default function AppShell({ children }: { children: ReactNode }) {
-    const { user, loading } = useAuth();
+    const { user, loading: authLoading, logout } = useAuth();
+    const { activeParttime, availableParttimes, loadingParttimes } = useParttime();
 
-    if (loading) {
+    if (authLoading || (user && loadingParttimes)) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
@@ -22,6 +25,29 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
     if (!user) {
         return <LoginPage />;
+    }
+
+    // Security Gate: If user is logged in but is not an authorized Admin for any Parttime workspace
+    if (availableParttimes.length === 0 || !activeParttime) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-6">
+                <div className="bg-surface border border-border rounded-2xl p-8 max-w-md w-full text-center shadow-xl">
+                    <div className="w-16 h-16 rounded-2xl bg-red/10 text-red flex items-center justify-center mx-auto mb-4">
+                        <ShieldAlert size={32} />
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
+                    <p className="text-textSecondary text-sm mb-6 leading-relaxed">
+                        Your account (<span className="text-white font-medium">{user.email}</span>) does not have admin permissions for any Parttime workspace.
+                    </p>
+                    <button
+                        onClick={logout}
+                        className="w-full py-3 bg-surface2 hover:bg-surface3 text-white font-semibold rounded-xl transition-all duration-200 border border-border cursor-pointer"
+                    >
+                        Sign Out & Try Another Account
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return (

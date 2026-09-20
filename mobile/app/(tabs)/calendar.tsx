@@ -10,11 +10,15 @@ import EditTransactionModal from '../../components/EditTransactionModal';
 import AdminStaffView from '../../components/admin/AdminStaffView';
 import { useAdminMode } from '../../context/AdminModeContext';
 import { useSales } from '../../context/SalesContext';
+import { useAdminAccess } from '../../hooks/useAdminAccess';
 import { useTheme } from '../../hooks/useTheme';
 
 export default function CalendarScreen() {
+    const { isAdmin } = useAdminAccess();
     const { isAdminMode } = useAdminMode();
-    if (isAdminMode) return <AdminStaffView />;
+
+    // Security Gate: Only show Admin Staff view if the logged in user is confirmed as an Admin
+    if (isAdmin && isAdminMode) return <AdminStaffView />;
 
     return <EmployeeCalendarScreen />;
 }

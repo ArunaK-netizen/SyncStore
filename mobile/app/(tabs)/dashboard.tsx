@@ -11,11 +11,15 @@ import AdminDashboardView from '../../components/admin/AdminDashboardView';
 import { useAdminMode } from '../../context/AdminModeContext';
 import { useProducts } from '../../context/ProductContext';
 import { useSales } from '../../context/SalesContext';
+import { useAdminAccess } from '../../hooks/useAdminAccess';
 import { useTheme } from '../../hooks/useTheme';
 
 export default function Dashboard() {
+    const { isAdmin } = useAdminAccess();
     const { isAdminMode } = useAdminMode();
-    if (isAdminMode) return <AdminDashboardView />;
+
+    // Security Gate: Only show Admin view if the logged in user is confirmed as an Admin
+    if (isAdmin && isAdminMode) return <AdminDashboardView />;
 
     return <EmployeeDashboard />;
 }

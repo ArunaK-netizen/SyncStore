@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // The ParttimeSelector / ParttimeContext will handle admin verification
                 // for the specific chosen parttime.
                 setUser(firebaseUser);
-                setIsAdmin(true); // Temporarily true so they can reach the Parttime selector
+                setIsAdmin(true);
                 setUnauthorized(false);
             } else {
                 setUser(null);

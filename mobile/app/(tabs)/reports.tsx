@@ -12,13 +12,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminAnalyticsView from '../(admin)/analytics';
 import { useAdminMode } from '../../context/AdminModeContext';
 import { useSales } from '../../context/SalesContext';
+import { useAdminAccess } from '../../hooks/useAdminAccess';
 import { useTheme } from '../../hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 
 export default function ReportsScreen() {
+    const { isAdmin } = useAdminAccess();
     const { isAdminMode } = useAdminMode();
-    if (isAdminMode) return <AdminAnalyticsView />;
+
+    // Security Gate: Only show Admin Analytics view if the logged in user is confirmed as an Admin
+    if (isAdmin && isAdminMode) return <AdminAnalyticsView />;
 
     return <EmployeeReportsScreen />;
 }
