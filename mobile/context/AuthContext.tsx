@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAccessStatus('pending');
       setLoading(false);
     });
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
     resolveAccess();

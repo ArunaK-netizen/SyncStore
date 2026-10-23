@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "id": "schedule",
+  "title": "Shift Schedule Matrix",
+  "description": "POV: Far-Left Panoramic Horizontal Tracking Shot",
+  "definition": {
+    "scene": {
+      "version": 3,
+      "camera": {
+        "x": -380,
+        "y": 0,
+        "z": 210,
+        "perspective": 1200,
+        "rotateX": 8,
+        "rotateY": -40,
+        "rotateZ": 0
+      },
+      "focus": {
+        "distance": 1150,
+        "fStop": 3.8,
+        "focalLength": 50,
+        "maxBlur": 5
+      },
+      "nodes": [
+        {
+          "id": "app-sidebar",
+          "transform": {
+            "x": -520,
+            "y": 0,
+            "z": 40,
+            "rotateX": 5,
+            "rotateY": 22,
+            "rotateZ": -2,
+            "scale": 1
+          }
+        },
+        {
+          "id": "schedule-header",
+          "transform": {
+            "x": 100,
+            "y": 200,
+            "z": 110,
+            "rotateX": 8,
+            "rotateY": -10,
+            "rotateZ": 1,
+            "scale": 1
+          }
+        },
+        {
+          "id": "timetable-grid",
+          "transform": {
+            "x": 100,
+            "y": -60,
+            "z": 50,
+            "rotateX": 5,
+            "rotateY": -12,
+            "rotateZ": 0,
+            "scale": 1
+          }
+        }
+      ]
+    },
+    "motion": {
+      "durationMs": 5000,
+      "speed": 1.0,
+      "tracks": [
+        {
+          "target": { "kind": "surface", "id": "schedule-header" },
+          "property": "x",
+          "keyframes": [
+            { "timeMs": 0, "value": -300, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 100, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "surface", "id": "schedule-header" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 180, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 110, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "x",
+          "keyframes": [
+            { "timeMs": 0, "value": -380, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 80, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateY",
+          "keyframes": [
+            { "timeMs": 0, "value": -40, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 10, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 210, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 160, "easing": "cinematic" }
+          ]
+        }
+      ]
+    },
+    "width": 1400,
+    "height": 980
+  }
+}

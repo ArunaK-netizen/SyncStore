@@ -4,6 +4,7 @@ import {
     deleteDoc,
     doc,
     getDocs,
+    limit,
     onSnapshot,
     orderBy,
     query,
@@ -84,9 +85,9 @@ export type ScheduleEntry = {
 };
 
 // --- Transactions ---
-export function subscribeTransactions(parttimeId: string, callback: (data: Transaction[]) => void) {
+export function subscribeTransactions(parttimeId: string, callback: (data: Transaction[]) => void, limitCount = 100) {
     if (!parttimeId) return () => { };
-    const q = query(collection(db, 'parttimes', parttimeId, 'transactions'), orderBy('timestamp', 'desc'));
+    const q = query(collection(db, 'parttimes', parttimeId, 'transactions'), orderBy('timestamp', 'desc'), limit(limitCount));
     return onSnapshot(q, (snap) => {
         const data: Transaction[] = [];
         const seen = new Set<string>();

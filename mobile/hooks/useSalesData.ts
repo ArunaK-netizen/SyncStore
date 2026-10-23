@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from '@react-native-firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, limit, onSnapshot, query, updateDoc, where } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDb } from '../firebase';
@@ -47,11 +47,11 @@ export const useSalesData = () => {
 
         const db = getDb();
 
-        // Filter by the current user to prevent data leaks.
-        // We use client-side sorting to avoid requiring a composite index right away.
+        // Filter by the current user to prevent data leaks. Limit to 50 most recent to save reads.
         const q = query(
             collection(db, 'parttimes', parttimeId, 'transactions'),
-            where('userId', '==', user.uid)
+            where('userId', '==', user.uid),
+            limit(50)
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {

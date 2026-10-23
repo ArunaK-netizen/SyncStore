@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "id": "overview",
+  "title": "Overview Dashboard",
+  "description": "POV: High-Angle Top-Left Isometric Hero Sweep",
+  "definition": {
+    "scene": {
+      "version": 3,
+      "camera": {
+        "x": -180,
+        "y": 40,
+        "z": 220,
+        "perspective": 1200,
+        "rotateX": 25,
+        "rotateY": -35,
+        "rotateZ": 0
+      },
+      "focus": {
+        "distance": 1100,
+        "fStop": 4.0,
+        "focalLength": 50,
+        "maxBlur": 5
+      },
+      "nodes": [
+        {
+          "id": "app-sidebar",
+          "transform": {
+            "x": -520,
+            "y": 0,
+            "z": 40,
+            "rotateX": 5,
+            "rotateY": 24,
+            "rotateZ": -2,
+            "scale": 1
+          }
+        },
+        {
+          "id": "kpi-grid",
+          "transform": {
+            "x": 100,
+            "y": 180,
+            "z": 100,
+            "rotateX": 8,
+            "rotateY": -14,
+            "rotateZ": 1,
+            "scale": 1
+          }
+        },
+        {
+          "id": "revenue-chart",
+          "transform": {
+            "x": -50,
+            "y": -120,
+            "z": 60,
+            "rotateX": 4,
+            "rotateY": -8,
+            "rotateZ": 0,
+            "scale": 1
+          }
+        },
+        {
+          "id": "insights-panel",
+          "transform": {
+            "x": 440,
+            "y": -100,
+            "z": 130,
+            "rotateX": 10,
+            "rotateY": -22,
+            "rotateZ": 2,
+            "scale": 1
+          }
+        }
+      ]
+    },
+    "motion": {
+      "durationMs": 5000,
+      "speed": 1.0,
+      "tracks": [
+        {
+          "target": { "kind": "surface", "id": "kpi-grid" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 180, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 100, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "surface", "id": "kpi-grid" },
+          "property": "scale",
+          "keyframes": [
+            { "timeMs": 0, "value": 0.85, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 1.0, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "x",
+          "keyframes": [
+            { "timeMs": 0, "value": -180, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 0, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "y",
+          "keyframes": [
+            { "timeMs": 0, "value": 40, "easing": "cinematic" },
+            { "timeMs": 5000, "value": -20, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 220, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 160, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateX",
+          "keyframes": [
+            { "timeMs": 0, "value": 25, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 12, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateY",
+          "keyframes": [
+            { "timeMs": 0, "value": -35, "easing": "cinematic" },
+            { "timeMs": 5000, "value": -15, "easing": "cinematic" }
+          ]
+        }
+      ]
+    },
+    "width": 1400,
+    "height": 980
+  }
+}

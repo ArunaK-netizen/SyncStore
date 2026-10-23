@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "id": "employees",
+  "title": "Employees Performance Hub",
+  "description": "POV: Extreme Right-Side Macro Close-Up on #1 Star Card",
+  "definition": {
+    "scene": {
+      "version": 3,
+      "camera": {
+        "x": 280,
+        "y": -40,
+        "z": 110,
+        "perspective": 1200,
+        "rotateX": 10,
+        "rotateY": 30,
+        "rotateZ": 0
+      },
+      "focus": {
+        "distance": 1020,
+        "fStop": 2.0,
+        "focalLength": 50,
+        "maxBlur": 6
+      },
+      "nodes": [
+        {
+          "id": "app-sidebar",
+          "transform": {
+            "x": -520,
+            "y": 0,
+            "z": 40,
+            "rotateX": 5,
+            "rotateY": 22,
+            "rotateZ": -2,
+            "scale": 1
+          }
+        },
+        {
+          "id": "top-star-card",
+          "transform": {
+            "x": -100,
+            "y": 140,
+            "z": 130,
+            "rotateX": 10,
+            "rotateY": -10,
+            "rotateZ": 1,
+            "scale": 1.05
+          }
+        },
+        {
+          "id": "staff-grid",
+          "transform": {
+            "x": 180,
+            "y": -80,
+            "z": 60,
+            "rotateX": 6,
+            "rotateY": -14,
+            "rotateZ": 0,
+            "scale": 1
+          }
+        }
+      ]
+    },
+    "motion": {
+      "durationMs": 5000,
+      "speed": 1.0,
+      "tracks": [
+        {
+          "target": { "kind": "surface", "id": "top-star-card" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 260, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 130, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "surface", "id": "top-star-card" },
+          "property": "rotateY",
+          "keyframes": [
+            { "timeMs": 0, "value": -45, "easing": "cinematic" },
+            { "timeMs": 5000, "value": -10, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "x",
+          "keyframes": [
+            { "timeMs": 0, "value": 280, "easing": "cinematic" },
+            { "timeMs": 5000, "value": -40, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateY",
+          "keyframes": [
+            { "timeMs": 0, "value": 30, "easing": "cinematic" },
+            { "timeMs": 5000, "value": -12, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 110, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 160, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "focus" },
+          "property": "distance",
+          "keyframes": [
+            { "timeMs": 0, "value": 1020, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 1250, "easing": "cinematic" }
+          ]
+        }
+      ]
+    },
+    "width": 1400,
+    "height": 980
+  }
+}

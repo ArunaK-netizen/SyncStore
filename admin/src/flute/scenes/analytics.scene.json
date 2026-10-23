@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "id": "analytics",
+  "title": "Analytics & Trends Studio",
+  "description": "POV: Top-Down Bird's-Eye Overhead Studio View",
+  "definition": {
+    "scene": {
+      "version": 3,
+      "camera": {
+        "x": 0,
+        "y": 150,
+        "z": 280,
+        "perspective": 1200,
+        "rotateX": 45,
+        "rotateY": 0,
+        "rotateZ": 0
+      },
+      "focus": {
+        "distance": 1120,
+        "fStop": 3.2,
+        "focalLength": 50,
+        "maxBlur": 5
+      },
+      "nodes": [
+        {
+          "id": "app-sidebar",
+          "transform": {
+            "x": -520,
+            "y": 0,
+            "z": 40,
+            "rotateX": 5,
+            "rotateY": 22,
+            "rotateZ": -2,
+            "scale": 1
+          }
+        },
+        {
+          "id": "yearly-trend-chart",
+          "transform": {
+            "x": -40,
+            "y": 100,
+            "z": 70,
+            "rotateX": 6,
+            "rotateY": -10,
+            "rotateZ": 0,
+            "scale": 1
+          }
+        },
+        {
+          "id": "payment-breakdown-card",
+          "transform": {
+            "x": 420,
+            "y": -80,
+            "z": 130,
+            "rotateX": 10,
+            "rotateY": -22,
+            "rotateZ": 2,
+            "scale": 1
+          }
+        }
+      ]
+    },
+    "motion": {
+      "durationMs": 5000,
+      "speed": 1.0,
+      "tracks": [
+        {
+          "target": { "kind": "surface", "id": "payment-breakdown-card" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 280, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 130, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "surface", "id": "payment-breakdown-card" },
+          "property": "rotateZ",
+          "keyframes": [
+            { "timeMs": 0, "value": 45, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 2, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateX",
+          "keyframes": [
+            { "timeMs": 0, "value": 45, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 16, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "y",
+          "keyframes": [
+            { "timeMs": 0, "value": 150, "easing": "cinematic" },
+            { "timeMs": 5000, "value": -20, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 280, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 170, "easing": "cinematic" }
+          ]
+        }
+      ]
+    },
+    "width": 1400,
+    "height": 980
+  }
+}

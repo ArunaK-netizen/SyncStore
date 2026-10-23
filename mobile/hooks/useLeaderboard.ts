@@ -1,7 +1,7 @@
-import { collection, onSnapshot, orderBy, query } from '@react-native-firebase/firestore';
+import { collection, limit, onSnapshot, orderBy, query, where } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
-import { getDb } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { getDb } from '../firebase';
 
 export type LeaderboardEntry = {
     uid: string;
@@ -24,10 +24,13 @@ export const useLeaderboard = () => {
 
         const db = getDb();
         const currentMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+        const startOfMonthMs = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
 
         const q = query(
             collection(db, 'parttimes', parttimeId, 'transactions'),
+            where('timestamp', '>=', startOfMonthMs),
             orderBy('timestamp', 'desc'),
+            limit(200)
         );
 
         const unsubscribe = onSnapshot(q, (snap) => {

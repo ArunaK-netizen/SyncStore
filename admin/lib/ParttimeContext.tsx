@@ -48,9 +48,8 @@ export function ParttimeProvider({ children }: { children: ReactNode }) {
 
                 // 2. Fetch all parttimes from Firestore
                 const parttimesSnap = await getDocs(query(collection(db, 'parttimes')));
-                const authorizedParttimes: ParttimeInfo[] = [];
 
-                for (const pDoc of parttimesSnap.docs) {
+                const checkParttimeAuth = async (pDoc: any): Promise<ParttimeInfo | null> => {
                     const pData = pDoc.data();
                     const pInfo: ParttimeInfo = {
                         id: pDoc.id,
@@ -60,16 +59,16 @@ export function ParttimeProvider({ children }: { children: ReactNode }) {
                         createdByEmail: pData.createdByEmail,
                     };
 
-                    // Check if user is owner/creator by email
+                    // Check direct ownership or cached adminEmails array on parent doc
                     if (
                         (pData.ownerEmail && pData.ownerEmail.toLowerCase().trim() === userEmail) ||
-                        (pData.createdByEmail && pData.createdByEmail.toLowerCase().trim() === userEmail)
+                        (pData.createdByEmail && pData.createdByEmail.toLowerCase().trim() === userEmail) ||
+                        (Array.isArray(pData.adminEmails) && pData.adminEmails.map((e: string) => String(e).toLowerCase().trim()).includes(userEmail))
                     ) {
-                        authorizedParttimes.push(pInfo);
-                        continue;
+                        return pInfo;
                     }
 
-                    // Check admin_config subcollection for this parttime
+                    // Fallback check on admin_config subcollection
                     try {
                         const adminConfigSnap = await getDocs(collection(db, 'parttimes', pDoc.id, 'admin_config'));
                         let isAdminForParttime = false;
@@ -82,13 +81,16 @@ export function ParttimeProvider({ children }: { children: ReactNode }) {
                                 }
                             }
                         });
-                        if (isAdminForParttime) {
-                            authorizedParttimes.push(pInfo);
-                        }
+                        if (isAdminForParttime) return pInfo;
                     } catch (e) {
                         console.error(`Error checking admin_config for parttime ${pDoc.id}:`, e);
                     }
-                }
+
+                    return null;
+                };
+
+                const authResults = await Promise.all(parttimesSnap.docs.map(checkParttimeAuth));
+                const authorizedParttimes = authResults.filter((p): p is ParttimeInfo => p !== null);
 
                 setAvailableParttimes(authorizedParttimes);
 

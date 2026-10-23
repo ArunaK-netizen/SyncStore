@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "id": "sales",
+  "title": "Sales Transactions Ledger",
+  "description": "POV: Low-Angle Upward Perspective / Terminal POV",
+  "definition": {
+    "scene": {
+      "version": 3,
+      "camera": {
+        "x": 0,
+        "y": -120,
+        "z": 180,
+        "perspective": 1200,
+        "rotateX": -15,
+        "rotateY": 0,
+        "rotateZ": 0
+      },
+      "focus": {
+        "distance": 1150,
+        "fStop": 3.5,
+        "focalLength": 50,
+        "maxBlur": 5
+      },
+      "nodes": [
+        {
+          "id": "app-sidebar",
+          "transform": {
+            "x": -520,
+            "y": 0,
+            "z": 40,
+            "rotateX": 5,
+            "rotateY": 22,
+            "rotateZ": -2,
+            "scale": 1
+          }
+        },
+        {
+          "id": "sales-action-bar",
+          "transform": {
+            "x": 100,
+            "y": 200,
+            "z": 110,
+            "rotateX": 8,
+            "rotateY": -10,
+            "rotateZ": 1,
+            "scale": 1
+          }
+        },
+        {
+          "id": "tx-table-surface",
+          "transform": {
+            "x": 100,
+            "y": -60,
+            "z": 50,
+            "rotateX": 5,
+            "rotateY": -12,
+            "rotateZ": 0,
+            "scale": 1
+          }
+        }
+      ]
+    },
+    "motion": {
+      "durationMs": 5000,
+      "speed": 1.0,
+      "tracks": [
+        {
+          "target": { "kind": "surface", "id": "sales-action-bar" },
+          "property": "y",
+          "keyframes": [
+            { "timeMs": 0, "value": 350, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 200, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "surface", "id": "sales-action-bar" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 220, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 110, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "y",
+          "keyframes": [
+            { "timeMs": 0, "value": -120, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 20, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateX",
+          "keyframes": [
+            { "timeMs": 0, "value": -15, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 18, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 180, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 150, "easing": "cinematic" }
+          ]
+        }
+      ]
+    },
+    "width": 1400,
+    "height": 980
+  }
+}

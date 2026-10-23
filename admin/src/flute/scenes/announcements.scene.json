@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "id": "announcements",
+  "title": "Staff Announcements Feed",
+  "description": "POV: Low-Left Steep Newsfeed Drop POV",
+  "definition": {
+    "scene": {
+      "version": 3,
+      "camera": {
+        "x": -260,
+        "y": -80,
+        "z": 200,
+        "perspective": 1200,
+        "rotateX": 28,
+        "rotateY": -32,
+        "rotateZ": 0
+      },
+      "focus": {
+        "distance": 1100,
+        "fStop": 3.2,
+        "focalLength": 50,
+        "maxBlur": 5
+      },
+      "nodes": [
+        {
+          "id": "app-sidebar",
+          "transform": {
+            "x": -520,
+            "y": 0,
+            "z": 40,
+            "rotateX": 5,
+            "rotateY": 22,
+            "rotateZ": -2,
+            "scale": 1
+          }
+        },
+        {
+          "id": "announcement-header",
+          "transform": {
+            "x": 100,
+            "y": 180,
+            "z": 110,
+            "rotateX": 8,
+            "rotateY": -10,
+            "rotateZ": 1,
+            "scale": 1
+          }
+        },
+        {
+          "id": "announcements-feed",
+          "transform": {
+            "x": 100,
+            "y": -50,
+            "z": 50,
+            "rotateX": 5,
+            "rotateY": -12,
+            "rotateZ": 0,
+            "scale": 1
+          }
+        }
+      ]
+    },
+    "motion": {
+      "durationMs": 5000,
+      "speed": 1.0,
+      "tracks": [
+        {
+          "target": { "kind": "surface", "id": "announcement-header" },
+          "property": "rotateX",
+          "keyframes": [
+            { "timeMs": 0, "value": -60, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 8, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "surface", "id": "announcement-header" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 250, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 110, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "y",
+          "keyframes": [
+            { "timeMs": 0, "value": -80, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 30, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateX",
+          "keyframes": [
+            { "timeMs": 0, "value": 28, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 10, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateY",
+          "keyframes": [
+            { "timeMs": 0, "value": -32, "easing": "cinematic" },
+            { "timeMs": 5000, "value": -8, "easing": "cinematic" }
+          ]
+        }
+      ]
+    },
+    "width": 1400,
+    "height": 980
+  }
+}

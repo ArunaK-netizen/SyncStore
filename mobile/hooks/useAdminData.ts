@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, setDoc, updateDoc } from '@react-native-firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, limit, onSnapshot, orderBy, query, setDoc, updateDoc } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDb } from '../firebase';
@@ -56,7 +56,7 @@ export const useAdminData = () => {
 
         setLoading(true);
 
-        const unsubTxs = onSnapshot(query(collection(db, 'parttimes', parttimeId, 'transactions'), orderBy('timestamp', 'desc')), (snap) => {
+        const unsubTxs = onSnapshot(query(collection(db, 'parttimes', parttimeId, 'transactions'), orderBy('timestamp', 'desc'), limit(50)), (snap) => {
             const txs: Transaction[] = [];
             snap.forEach(d => txs.push({ id: d.id, ...d.data() } as Transaction));
             setTransactions(txs);

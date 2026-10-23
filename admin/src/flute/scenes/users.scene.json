@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "id": "users",
+  "title": "User Management & Security Hub",
+  "description": "POV: Frontal Symmetrical Security Inspection Vault POV",
+  "definition": {
+    "scene": {
+      "version": 3,
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "z": 120,
+        "perspective": 1200,
+        "rotateX": 0,
+        "rotateY": 0,
+        "rotateZ": 0
+      },
+      "focus": {
+        "distance": 1050,
+        "fStop": 2.8,
+        "focalLength": 50,
+        "maxBlur": 6
+      },
+      "nodes": [
+        {
+          "id": "app-sidebar",
+          "transform": {
+            "x": -520,
+            "y": 0,
+            "z": 40,
+            "rotateX": 5,
+            "rotateY": 22,
+            "rotateZ": -2,
+            "scale": 1
+          }
+        },
+        {
+          "id": "security-badge-card",
+          "transform": {
+            "x": -100,
+            "y": 160,
+            "z": 120,
+            "rotateX": 10,
+            "rotateY": -12,
+            "rotateZ": 1,
+            "scale": 1.05
+          }
+        },
+        {
+          "id": "users-list-table",
+          "transform": {
+            "x": 180,
+            "y": -60,
+            "z": 50,
+            "rotateX": 5,
+            "rotateY": -12,
+            "rotateZ": 0,
+            "scale": 1
+          }
+        }
+      ]
+    },
+    "motion": {
+      "durationMs": 5000,
+      "speed": 1.0,
+      "tracks": [
+        {
+          "target": { "kind": "surface", "id": "security-badge-card" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 300, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 120, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "surface", "id": "security-badge-card" },
+          "property": "scale",
+          "keyframes": [
+            { "timeMs": 0, "value": 1.3, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 1.05, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "x",
+          "keyframes": [
+            { "timeMs": 0, "value": -120, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 0, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "z",
+          "keyframes": [
+            { "timeMs": 0, "value": 120, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 170, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "camera" },
+          "property": "rotateX",
+          "keyframes": [
+            { "timeMs": 0, "value": 0, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 12, "easing": "cinematic" }
+          ]
+        },
+        {
+          "target": { "kind": "focus" },
+          "property": "distance",
+          "keyframes": [
+            { "timeMs": 0, "value": 1050, "easing": "cinematic" },
+            { "timeMs": 5000, "value": 1250, "easing": "cinematic" }
+          ]
+        }
+      ]
+    },
+    "width": 1400,
+    "height": 980
+  }
+}

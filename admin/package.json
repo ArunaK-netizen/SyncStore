@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@webprodigies/flute": "^0.1.2",
     "date-fns": "^4.1.0",
     "firebase": "^12.10.0",
     "jspdf": "^4.2.0",
