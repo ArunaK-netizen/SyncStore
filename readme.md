@@ -190,13 +190,13 @@ Small businesses, pop-up stores, and part-time teams often struggle with fragmen
 ```mermaid
 flowchart TD
     subgraph Clients["Front-End Interfaces"]
-        Mobile["📱 Mobile App (React Native / Expo)<br/>• POS Terminal<br/>• Personal Shifts<br/>• Performance Leaderboard"]
-        WebAdmin["💻 Web Admin (Next.js 16 / React 19)<br/>• Store Inventory CRUD<br/>• Shift Scheduling<br/>• Reports & Excel/PDF Export"]
+        Mobile["📱 Mobile App (React Native & Expo)"]
+        WebAdmin["💻 Web Admin (Next.js 16 & React 19)"]
     end
 
     subgraph FirebaseCore["Cloud Infrastructure (Google Firebase)"]
-        Auth["🔑 Firebase Auth<br/>(Google Sign-In / Whitelist Check)"]
-        Firestore[("🔥 Cloud Firestore (Real-time DB)<br/>• /parttimes/{id}/transactions<br/>• /parttimes/{id}/products<br/>• /parttimes/{id}/schedules<br/>• /parttimes/{id}/announcements<br/>• /accessRequests")]
+        Auth["🔑 Firebase Auth (Google Sign-In & Whitelist)"]
+        Firestore[("🔥 Cloud Firestore (Real-Time Database)")]
     end
 
     subgraph Distribution["Automated Build & Deployment"]
@@ -207,16 +207,19 @@ flowchart TD
         Vercel["▲ Vercel Cloud (Web Hosting)"]
     end
 
-    Mobile <-->|Real-time Snapshot Sync| Firestore
-    WebAdmin <-->|Real-time Snapshot Sync| Firestore
-    Mobile -->|User Authentication| Auth
-    WebAdmin -->|Role Validation| Auth
+    Mobile -->|Live Sync| Firestore
+    Firestore -->|Data Updates| Mobile
+    WebAdmin -->|Live Sync| Firestore
+    Firestore -->|Data Updates| WebAdmin
 
-    Mobile -.->|Push to main| GHActions
+    Mobile -->|Authentication| Auth
+    WebAdmin -->|Role Verification| Auth
+
+    Mobile -. Push to main .-> GHActions
     GHActions -->|Trigger Build| EAS
     EAS -->|Signed APK| Releases
     EAS -->|Distribution Link| Orion
-    WebAdmin -.->|Auto Deploy| Vercel
+    WebAdmin -. Auto Deploy .-> Vercel
 ```
 
 ---
